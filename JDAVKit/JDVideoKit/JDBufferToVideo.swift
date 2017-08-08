@@ -9,45 +9,38 @@
 import Foundation
 import AVFoundation
 import CoreVideo
+
 protocol VideoFactoryPipeline {
-    func havechooseVideo(video:VideoOrigin)
-    func haveCameraBuffer(buffer:[CVImageBuffer])
-    func bufferHabeBeenTovideo(url:URL)
-    func setDoneClosure(clo: @escaping (_ url:URL)->())
+    func bufferHabeBeenTovideo(url:URL,_ factory:JDVideoFactory)
+    func reportProgress(_ progress:Progress,_ factory:JDVideoFactory)
 }
 
-
-class JDVideoFactory:NSObject,VideoFactoryPipeline
+class JDVideoFactory:NSObject
 {
-    var videoorigin:VideoOrigin!
+    var pipeline:VideoFactoryPipeline?
     var buffertoVideo:JDBufferToVideo?
+    var videoorigin:VideoOrigin?
     var cvimgbuffer:[CVImageBuffer] = [CVImageBuffer]()
-    var doneClosure:(_ url:URL)->() = { url in
-        
-    }
     var fps:Int = 30
+    var type:videoProcessType!
+    
     override init()
     {
         super.init()
     }
     
+    init(type:videoProcessType,video:VideoOrigin)
+    {
+        super.init()
+        self.type = type
+        self.videoorigin = video
+    }
+    
+    //For Processing Camera Shot
     init(withBuffer buffer:[CVImageBuffer]) {
         self.cvimgbuffer = buffer
     }
-    
-    func setDoneClosure(clo: @escaping (_ url:URL) -> ()) {
-        self.doneClosure = clo
-    }
-    
-    ///1.0
-    func havechooseVideo(video: VideoOrigin) {
-        self.videoorigin = video
-        assetTOcvimgbuffer()
-    }
-    func haveCameraBuffer(buffer: [CVImageBuffer]) {
-        self.cvimgbuffer = buffer
-        bufferToVideo()
-    }
+
     ///2.0
     func assetTOcvimgbuffer()
     {
@@ -85,19 +78,27 @@ class JDVideoFactory:NSObject,VideoFactoryPipeline
     ///3.0
     func bufferToVideo()
     {
-        cvimgbuffer.reverse()
-        let jdbuffer = JDBufferToVideo(buffer: cvimgbuffer, fps: Int32(fps))
-        jdbuffer.factoryPipeline = self
-        jdbuffer.build({ (progress) in
-            
-        }) { (error) in
-            print(error)
+        if(self.type == .Reverse)
+        {
+            cvimgbuffer.reverse()
         }
-    }
-    ///4.0
-    func bufferHabeBeenTovideo(url: URL)
-    {
-        self.doneClosure(url)
+        let jdbuffer = JDBufferToVideo(buffer: cvimgbuffer, fps: Int32(fps))
+        if(self.type == .Boom)
+        {
+            jdbuffer.filename = "BoomVideo.mov"
+        }
+        if(self.type == .Speed)
+        {
+            jdbuffer.fps = jdbuffer.fps * 2
+        }
+        
+        jdbuffer.build({ (url) in
+            self.pipeline?.bufferHabeBeenTovideo(url: url, self)
+        }, { (progress) in
+            self.pipeline?.reportProgress(progress, self)
+        }) { (error) in
+            
+        }
     }
 }
 
@@ -106,11 +107,11 @@ class JDVideoFactory:NSObject,VideoFactoryPipeline
 class JDBufferToVideo:NSObject
 {
     let buffer: [CVPixelBuffer]
-    var factoryPipeline:VideoFactoryPipeline?
     var fps: Int32 = 30
     let kErrorDomain = "TimeLapseBuilder"
     let kFailedToStartAssetWriterError = 0
     let kFailedToAppendPixelBufferError = 1
+    var filename:String = "MergedVideo.mov"
     
     //Capture Real time
     init(buffer: [CVPixelBuffer], fps: Int32) {
@@ -118,7 +119,7 @@ class JDBufferToVideo:NSObject
         self.fps = fps
     }
     
-    func build(_ progress: @escaping ((Progress) -> Void), failure: ((NSError) -> Void)) {
+    func build(_ sucess: @escaping ((URL) -> Void),_ progress: @escaping ((Progress) -> Void), failure: ((NSError) -> Void)) {
         
         ///Get Basic Setting
         var error: NSError?
@@ -135,7 +136,8 @@ class JDBufferToVideo:NSObject
         ///Now in order to glue all the data we grabbed so far, we need to use magic AVAssetWriter. It’s a powerful class in AVFoundation which allow to write a video into output directory, encode the video file format into .mov or .mp4 and manage the metadata of the frames while recording it.
         var videoWriter: AVAssetWriter?
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
-        let videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent("MergedVideo.mov"))
+        
+        let videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent(filename))
         do {
             try FileManager.default.removeItem(at: videoOutputURL)
         } catch {}
@@ -203,10 +205,7 @@ class JDBufferToVideo:NSObject
                     videoWriterInput.markAsFinished()
                     videoWriter.finishWriting {
                         if error == nil {
-                            if(self.factoryPipeline != nil)
-                            {
-                                self.factoryPipeline?.bufferHabeBeenTovideo(url: videoOutputURL)
-                            }
+                            sucess(videoOutputURL)
                         }
                     }
                 }

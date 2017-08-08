@@ -17,6 +17,7 @@ class JDProcessingViewController:UIViewController
     var preview: AVCaptureVideoPreviewLayer!
     var captureSession:AVCaptureSession!
     var device:AVCaptureDevice!
+    var camerafactory:JDVideoFactory?
     //
     fileprivate var buffers = [CVImageBuffer]()
     fileprivate let totalFrames: Int = 120
@@ -31,6 +32,7 @@ class JDProcessingViewController:UIViewController
     @IBOutlet weak var sessionLayer: UIView!
     @IBOutlet weak var SwitchCamVIew: SwitchIconDraw!
     @IBOutlet weak var FlashView: FlashIconDraw!
+    
     
    
     func videoHasBeenSelect(video:VideoOrigin)
@@ -204,14 +206,25 @@ extension JDProcessingViewController: AVCaptureVideoDataOutputSampleBufferDelega
                 recordShallStart = false
                 captureSession.stopRunning()
                 
-                let factory = JDVideoFactory(withBuffer: buffers)
-                factory.setDoneClosure(clo: { (url) in
-                    let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: url, referenceURL: nil)
-                    self.videoHasBeenSelect(video: videoorigin)
-                })
-                factory.bufferToVideo()
+                camerafactory = JDVideoFactory(withBuffer: buffers)
+                camerafactory?.pipeline = self
+                camerafactory?.bufferToVideo()
             }
         }
+    }
+}
+
+extension JDProcessingViewController:VideoFactoryPipeline
+{
+    func bufferHabeBeenTovideo(url:URL,_ factory:JDVideoFactory)
+    {
+        let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: url, referenceURL: nil)
+        self.videoHasBeenSelect(video: videoorigin)
+    }
+    
+    func reportProgress(_ progress:Progress,_ factory:JDVideoFactory)
+    {
+        
     }
 }
 

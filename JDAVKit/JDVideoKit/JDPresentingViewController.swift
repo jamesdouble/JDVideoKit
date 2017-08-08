@@ -9,39 +9,54 @@
 import AVFoundation
 import UIKit
 import MobileCoreServices
+
+enum videoProcessType
+{
+    case Boom
+    case Speed
+    case Reverse
+}
  
 
 class JDPresentingViewController:UIViewController
 {
-    var pipeline:VideoFactoryPipeline?
     var videoOrigin:VideoOrigin!
     let videoasset:AVAsset
-    var videoFactory = JDVideoFactory()
+    var FinalvideoFactory:JDVideoFactory?
+    var BoomPreFactory:JDVideoFactory?
+    //
+    var assetitem:AVPlayerItem!
+    var BoomVideoItem:AVPlayerItem?
     let videoLayer:AVPlayerLayer
     let videoPlayer:AVPlayer
+    //
     var playerItemContext:Int8 = 0
     var trimImgBuffer:[CGImage] = [CGImage]()
     var StratingTouchX:CGFloat = 0
     let imgViewCount:Int = 10
-    
+    var observer:Any!
+    //
     @IBOutlet weak var PlayerViewContainer: UIView!
     @IBOutlet weak var trimViewContainer: UIView!
     @IBOutlet weak var SpeedUpButton: UIButton!
     @IBOutlet weak var BoomButton: UIButton!
     @IBOutlet weak var RecerseButton: UIButton!
+    @IBOutlet weak var BoomProgressView: UIProgressView!
     
-    
+    //
     var timeLineView:UIView = UIView()
     var LeadingConstraint:NSLayoutConstraint!
     
-    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?,video:VideoOrigin) {
+    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?,video:VideoOrigin)
+    {
+        //Init Video Asset
         self.videoOrigin = video
         if let url = videoOrigin.mediaUrl as? URL
         {
             videoasset = AVAsset(url: url)
         }
         else { fatalError("videoOrigin.mediaUrl == nil") }
-        let assetitem = AVPlayerItem(asset: videoasset)
+        assetitem = AVPlayerItem(asset: videoasset)
         videoPlayer = AVPlayer(playerItem: assetitem)
         videoLayer = AVPlayerLayer(player: videoPlayer)
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -50,6 +65,34 @@ class JDPresentingViewController:UIViewController
                               forKeyPath: #keyPath(AVPlayerItem.status),
                               options: [.old, .new],
                               context: &playerItemContext)
+        
+        let interval = CMTime(seconds: 0.1,
+                              preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        observer = videoPlayer.addPeriodicTimeObserver(forInterval: interval, queue: DispatchQueue.main)
+         { [weak self] (time) in
+            
+            if(self?.videoPlayer.currentItem?.status == .readyToPlay)
+            {
+                guard let duration = self?.videoPlayer.currentItem?.asset.duration
+                else{
+                    return
+                }
+                let totalsecond = CMTimeGetSeconds(duration)
+                let ratio =  Float(CMTimeGetSeconds(time)) / Float(totalsecond)
+                self?.LeadingConstraint.constant = CGFloat(Double((self?.trimViewContainer.frame.width)!) * Double(ratio))
+                self?.timeLineView.setNeedsLayout()
+                
+                UIView.animate(withDuration: 0.1, animations: { 
+                    self?.timeLineView.updateConstraintsIfNeeded()
+                })
+            }
+        }
+        
+        
+        //PrepareFor Boom
+        BoomPreFactory = JDVideoFactory(type: .Boom, video: self.videoOrigin)
+        BoomPreFactory?.pipeline = self
+        BoomPreFactory?.assetTOcvimgbuffer()
         
         //產生縮圖列
         let assetImgGenerate : AVAssetImageGenerator    = AVAssetImageGenerator(asset: videoasset)
@@ -84,10 +127,6 @@ class JDPresentingViewController:UIViewController
     
     override func viewDidLoad()
     {
-        self.pipeline?.setDoneClosure(clo: { (url) in
-            print(url)
-            //self.videoHasBeenChoose(url: url)
-        })
         self.PlayerViewContainer.layer.addSublayer(videoLayer)
         //
         var lastimgView:UIImageView?
@@ -137,7 +176,8 @@ class JDPresentingViewController:UIViewController
         SpeedUpButton.layer.cornerRadius = 10.0
         BoomButton.layer.cornerRadius = 10.0
         RecerseButton.layer.cornerRadius = 10.0
-        
+        //
+        self.BoomProgressView.isHidden = false
     }
     
     override func viewDidLayoutSubviews() {
@@ -152,19 +192,53 @@ class JDPresentingViewController:UIViewController
         }
     }
     
+    func ChangeMethd(selected:UIButton)
+    {
+        let array = [SpeedUpButton,BoomButton,RecerseButton]
+        for btn in array
+        {
+            if(selected == btn!)
+            {
+                btn!.layer.borderWidth = 5.0
+                btn!.layer.borderColor = UIColor.red.cgColor
+            }
+            else
+            {
+                btn!.layer.borderWidth = 0.0
+            }
+        }
+    }
+    
     
     @IBAction func SpeedUpAction(_ sender: Any) {
+        ChangeMethd(selected: SpeedUpButton)
+        if videoPlayer.currentItem! != assetitem
+        {
+            self.videoPlayer.replaceCurrentItem(with: assetitem)
+        }
         videoPlayer.seek(to: kCMTimeZero) { (bool) in
             self.videoPlayer.rate = 2.0
         }
     }
     
     @IBAction func BoomerangeAction(_ sender: Any) {
-        
-        
+        ChangeMethd(selected: BoomButton)
+        if let item = BoomVideoItem,videoPlayer.currentItem! != item
+        {
+            self.videoPlayer.replaceCurrentItem(with: item)
+            videoPlayer.seek(to: kCMTimeZero) { (bool) in
+                self.videoPlayer.rate = 1.0
+            }
+        }
     }
   
-    @IBAction func ReverseAction(_ sender: Any) {
+    @IBAction func ReverseAction(_ sender: Any)
+    {
+        ChangeMethd(selected: RecerseButton)
+        if videoPlayer.currentItem! != assetitem
+        {
+            self.videoPlayer.replaceCurrentItem(with: assetitem)
+        }
         videoPlayer.seek(to: videoasset.duration) { (bool) in
             self.videoPlayer.rate = -1.0
         }
@@ -196,7 +270,8 @@ class JDPresentingViewController:UIViewController
             }
             
             // Switch over the status
-            switch status {
+            switch status
+            {
             case .readyToPlay:
                 videoPlayer.play()
                 break
@@ -208,6 +283,31 @@ class JDPresentingViewController:UIViewController
         }
     }
     
+}
+
+extension JDPresentingViewController:VideoFactoryPipeline
+{
+    func bufferHabeBeenTovideo(url:URL,_ factory:JDVideoFactory)
+    {
+        if(factory == BoomPreFactory)
+        {
+            DispatchQueue.main.sync {
+                self.BoomProgressView.removeFromSuperview()
+            }
+            let asset = AVAsset(url: url)
+            self.BoomVideoItem = AVPlayerItem(asset: asset)
+        }
+    }
+    func reportProgress(_ progress:Progress,_ factory:JDVideoFactory)
+    {
+        if(factory == BoomPreFactory)
+        {
+            DispatchQueue.main.sync {
+                let progressfloat = Float(progress.completedUnitCount)/Float(progress.totalUnitCount)
+                self.BoomProgressView.progress = progressfloat
+            }
+        }
+    }
 }
 
 extension JDPresentingViewController:UIGestureRecognizerDelegate
