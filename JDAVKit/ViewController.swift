@@ -18,8 +18,8 @@ class ViewController: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        let vc = JDVideoKit().processingVC
-        self.present(vc!, animated: true, completion: nil)
+        let vk = JDVideoKit(delegate: self)
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -30,3 +30,14 @@ class ViewController: UIViewController {
 
 }
 
+extension ViewController:JDVideoKitDelegate
+{
+    func videoResource(forkit kit: JDVideoKit) -> Any? {
+        return nil
+    }
+    
+    func FinalOutput(final video:AVAsset,url:URL)
+    {
+        
+    }
+}

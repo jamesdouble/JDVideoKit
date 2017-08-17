@@ -10,21 +10,25 @@ import AVFoundation
 import UIKit
 import MobileCoreServices
 
-class JDProcessingViewController:UIViewController
+protocol JDProcessingViewControllerDlegate
 {
-    var imgPickerVC:UIImagePickerController?
-    var presetingVC:JDPresentingViewController?
-    var preview: AVCaptureVideoPreviewLayer!
-    var captureSession:AVCaptureSession!
-    var device:AVCaptureDevice!
-    var camerafactory:JDVideoFactory?
+    func VideoHasBeenSelect(video:VideoOrigin)->JDPresentingViewController?
+}
+
+public class JDProcessingViewController:UIViewController
+{
+    var delegate:JDProcessingViewControllerDlegate?
     //
-    fileprivate var buffers = [CVImageBuffer]()
-    fileprivate let totalFrames: Int = 120
-    fileprivate var recordShallStart: Bool = false
-    var camerapostiion:Bool = false
-    var flashOn:Bool = false
-    var pinchZoomGesture:UIPinchGestureRecognizer!
+    fileprivate var imgPickerVC:UIImagePickerController?
+    fileprivate var preview: AVCaptureVideoPreviewLayer?
+    fileprivate var captureSession:AVCaptureSession!
+    fileprivate var device:AVCaptureDevice!
+    fileprivate var dataOutput:AVCaptureMovieFileOutput?
+    //
+    fileprivate var filename:String = "RecordVideo.mov"
+    fileprivate var camerapostiion:Bool = false
+    fileprivate var flashOn:Bool = false
+    fileprivate var pinchZoomGesture:UIPinchGestureRecognizer!
     //
     @IBOutlet weak var libraryButton: UIButton!
     @IBOutlet weak var progressView: UIProgressView!
@@ -32,22 +36,37 @@ class JDProcessingViewController:UIViewController
     @IBOutlet weak var sessionLayer: UIView!
     @IBOutlet weak var SwitchCamVIew: SwitchIconDraw!
     @IBOutlet weak var FlashView: FlashIconDraw!
+
     
-    
-   
     func videoHasBeenSelect(video:VideoOrigin)
     {
-        presetingVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
-        self.present(presetingVC!, animated: true, completion: nil)
+        if let presenting = delegate?.VideoHasBeenSelect(video: video)
+        {
+            self.present(presenting, animated: true, completion: nil)
+        }
+        else
+        {
+            self.dismiss(animated: true, completion: nil)
+        }
     }
     
-    override func viewDidLayoutSubviews() {
+    
+    
+    override public func viewWillAppear(_ animated: Bool) {
+        if(captureSession != nil)
+        {
+            captureSession.startRunning()
+        }
+    }
+    
+    override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        preview.frame = sessionLayer.bounds
+        preview?.frame = sessionLayer.bounds
     }
     
-    override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
+
         PhotoAlbum.shared.getLibraryVideoThumbnail(choose: { (img) in
             if(img != nil)
             {
@@ -66,7 +85,7 @@ class JDProcessingViewController:UIViewController
         FlashView.addGestureRecognizer(tap2)
     }
     
-    func openLibrary(_ sender: Any) {
+    private func openLibrary(_ sender: Any) {
         imgPickerVC = UIImagePickerController()
         imgPickerVC?.delegate = self
         imgPickerVC?.sourceType = .photoLibrary
@@ -98,14 +117,11 @@ class JDProcessingViewController:UIViewController
     
     func pinchToZoom(_ sender: UIPinchGestureRecognizer) {
         if sender.state == .changed {
-            
             let maxZoomFactor = device.activeFormat.videoMaxZoomFactor
             let pinchVelocityDividerFactor: CGFloat = 5.0
-            
             do {
                 try device.lockForConfiguration()
                 defer { device.unlockForConfiguration() }
-                
                 let desiredZoomFactor = device.videoZoomFactor + atan2(sender.velocity, pinchVelocityDividerFactor)
                 device.videoZoomFactor = max(1.0, min(desiredZoomFactor, maxZoomFactor))
             } catch {
@@ -119,14 +135,42 @@ class JDProcessingViewController:UIViewController
     {
         (sender as! UIButton).isUserInteractionEnabled = false
         progressView.alpha = 1.0
-        recordShallStart = true
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
+        let videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent(filename))
+        do {
+            try FileManager.default.removeItem(at: videoOutputURL)
+        } catch {}
+        dataOutput?.maxRecordedDuration = CMTime(seconds: 6.0, preferredTimescale: 30)
+        dataOutput?.startRecording(toOutputFileURL: videoOutputURL, recordingDelegate: self)
     }
-    
-  
 }
 
-extension JDProcessingViewController: AVCaptureVideoDataOutputSampleBufferDelegate
+extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
 {
+    public func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!)
+    {
+        let queue: DispatchQueue = DispatchQueue(label: "VideoOutputQueue")
+        queue.async {
+            while(captureOutput.isRecording)
+            {
+                let duration = captureOutput.recordedDuration
+                let second = CMTimeGetSeconds(duration)
+                let ratio = second / 6.0
+                DispatchQueue.main.sync {
+                    self.progressView.progress = Float(ratio)
+                }
+            }
+        }
+    }
+    
+    public func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!)
+    {
+        let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: outputFileURL, referenceURL: nil)
+        self.videoHasBeenSelect(video: videoorigin)
+        self.captureKnob.isUserInteractionEnabled = true
+        self.progressView.progress = 0
+    }
+    
     func switchCamera()
     {
         for input in captureSession.inputs
@@ -141,11 +185,10 @@ extension JDProcessingViewController: AVCaptureVideoDataOutputSampleBufferDelega
         {
             captureSession.addInput(input)
         }
-        
          captureSession.startRunning()
     }
     
-    func prepareSession()
+    fileprivate func prepareSession()
     {
         device = connectedDevice(front: camerapostiion)
         let input = try? AVCaptureDeviceInput(device: device)
@@ -153,24 +196,30 @@ extension JDProcessingViewController: AVCaptureVideoDataOutputSampleBufferDelega
         {
             captureSession.addInput(input)
         }
-        else { fatalError("captureSession can't add input") }
+        else { print("captureSession can't add input")
+            return}
+        
+        let audioDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeAudio)
+        do {
+            let audioInput = try AVCaptureDeviceInput(device: audioDevice)
+            self.captureSession.addInput(audioInput)
+        } catch {
+            print("Unable to add audio device to the recording.")
+            return
+        }
+        
         captureSession.sessionPreset = AVCaptureSessionPresetHigh
        
         /// 4
-        let dataOutput = AVCaptureVideoDataOutput()
-        dataOutput.videoSettings = [
-            String(kCVPixelBufferPixelFormatTypeKey) : Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
-        ]
+        dataOutput = AVCaptureMovieFileOutput()
+        
         if captureSession.canAddOutput(dataOutput) {
             captureSession.addOutput(dataOutput)
         }
         else { fatalError("captureSession can't add output") }
         captureSession.commitConfiguration()
         captureSession.startRunning()
-        
-        let queue: DispatchQueue = DispatchQueue(label: "VideoOutputQueue")
-        dataOutput.setSampleBufferDelegate(self, queue: queue)
-        dataOutput.connection(withMediaType: AVMediaTypeVideo).videoOrientation = .portrait
+        dataOutput?.connection(withMediaType: AVMediaTypeVideo).videoOrientation = .portrait
         ///
         preview = AVCaptureVideoPreviewLayer(session: captureSession)
         preview?.videoGravity = AVLayerVideoGravityResizeAspectFill
@@ -190,47 +239,11 @@ extension JDProcessingViewController: AVCaptureVideoDataOutputSampleBufferDelega
                 .filter { $0.hasMediaType(AVMediaTypeVideo) && $0.position == postition }.first! as AVCaptureDevice
         }
     }
-    
-    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
-        guard let cvBuf = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        if captureOutput is AVCaptureVideoDataOutput, recordShallStart
-        {
-            /// 3
-            let copiedCvBuf = cvBuf.deepcopy()
-            buffers.append(copiedCvBuf)
-            DispatchQueue.main.async {
-                self.progressView.progress = (Float(self.buffers.count) / Float(self.totalFrames))
-            }
-            /// 4
-            if buffers.count >= totalFrames {
-                recordShallStart = false
-                captureSession.stopRunning()
-                
-                camerafactory = JDVideoFactory(withBuffer: buffers)
-                camerafactory?.pipeline = self
-                camerafactory?.bufferToVideo()
-            }
-        }
-    }
-}
-
-extension JDProcessingViewController:VideoFactoryPipeline
-{
-    func bufferHabeBeenTovideo(url:URL,_ factory:JDVideoFactory)
-    {
-        let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: url, referenceURL: nil)
-        self.videoHasBeenSelect(video: videoorigin)
-    }
-    
-    func reportProgress(_ progress:Progress,_ factory:JDVideoFactory)
-    {
-        
-    }
 }
 
 extension JDProcessingViewController:UIImagePickerControllerDelegate,UINavigationControllerDelegate
 {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any])
+    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any])
     {
         picker.dismiss(animated: true) { 
             let type = info["UIImagePickerControllerMediaType"]
@@ -241,7 +254,7 @@ extension JDProcessingViewController:UIImagePickerControllerDelegate,UINavigatio
         }
     }
     
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController)
+    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController)
     {
         self.dismiss(animated: true, completion: nil)
     }

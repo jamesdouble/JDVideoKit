@@ -10,30 +10,33 @@ import AVFoundation
 import UIKit
 import MobileCoreServices
 
-enum videoProcessType
+public enum videoProcessType
 {
     case Boom
     case Speed
+    case Normal
     case Reverse
 }
- 
 
-class JDPresentingViewController:UIViewController
+public class JDPresentingViewController:UIViewController
 {
-    var videoOrigin:VideoOrigin!
-    let videoasset:AVAsset
-    var FinalvideoFactory:JDVideoFactory?
-    var BoomPreFactory:JDVideoFactory?
-    //
+    //播放器相關
     var assetitem:AVPlayerItem!
     var BoomVideoItem:AVPlayerItem?
     let videoLayer:AVPlayerLayer
     let videoPlayer:AVPlayer
-    //
+    //影片檔案相關
+    var videoOrigin:VideoOrigin!
+    let videoasset:AVAsset
+    //影片產生器相關
+    var FinalvideoFactory:JDVideoFactory?
+    var BoomPreFactory:JDVideoFactory?
+    //參數相關
     var playerItemContext:Int8 = 0
     var trimImgBuffer:[CGImage] = [CGImage]()
     var StratingTouchX:CGFloat = 0
     let imgViewCount:Int = 10
+    var ChoosingMode:videoProcessType = .Normal
     var observer:Any!
     //
     @IBOutlet weak var PlayerViewContainer: UIView!
@@ -42,10 +45,25 @@ class JDPresentingViewController:UIViewController
     @IBOutlet weak var BoomButton: UIButton!
     @IBOutlet weak var RecerseButton: UIButton!
     @IBOutlet weak var BoomProgressView: UIProgressView!
-    
     //
     var timeLineView:UIView = UIView()
     var LeadingConstraint:NSLayoutConstraint!
+    
+    init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?,video:AVAsset)
+    {
+        //Init Video Asset
+        videoasset = video
+        assetitem = AVPlayerItem(asset: videoasset)
+        videoPlayer = AVPlayer(playerItem: assetitem)
+        videoLayer = AVPlayerLayer(player: videoPlayer)
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        
+        assetitem.addObserver(self,
+                              forKeyPath: #keyPath(AVPlayerItem.status),
+                              options: [.old, .new],
+                              context: &playerItemContext)
+        generateThumb()
+    }
     
     init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?,video:VideoOrigin)
     {
@@ -65,35 +83,11 @@ class JDPresentingViewController:UIViewController
                               forKeyPath: #keyPath(AVPlayerItem.status),
                               options: [.old, .new],
                               context: &playerItemContext)
-        
-        let interval = CMTime(seconds: 0.1,
-                              preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        observer = videoPlayer.addPeriodicTimeObserver(forInterval: interval, queue: DispatchQueue.main)
-         { [weak self] (time) in
-            
-            if(self?.videoPlayer.currentItem?.status == .readyToPlay)
-            {
-                guard let duration = self?.videoPlayer.currentItem?.asset.duration
-                else{
-                    return
-                }
-                let totalsecond = CMTimeGetSeconds(duration)
-                let ratio =  Float(CMTimeGetSeconds(time)) / Float(totalsecond)
-                self?.LeadingConstraint.constant = CGFloat(Double((self?.trimViewContainer.frame.width)!) * Double(ratio))
-                self?.timeLineView.setNeedsLayout()
-                
-                UIView.animate(withDuration: 0.1, animations: { 
-                    self?.timeLineView.updateConstraintsIfNeeded()
-                })
-            }
-        }
-        
-        
-        //PrepareFor Boom
-        BoomPreFactory = JDVideoFactory(type: .Boom, video: self.videoOrigin)
-        BoomPreFactory?.pipeline = self
-        BoomPreFactory?.assetTOcvimgbuffer()
-        
+        generateThumb()
+    }
+    
+    func generateThumb()
+    {
         //產生縮圖列
         let assetImgGenerate : AVAssetImageGenerator    = AVAssetImageGenerator(asset: videoasset)
         assetImgGenerate.appliesPreferredTrackTransform = true
@@ -104,7 +98,7 @@ class JDPresentingViewController:UIViewController
         let thumbtimeSeconds:Double  = Double(CMTimeGetSeconds(thumbTime))
         let thumbAvg:Double  = thumbtimeSeconds/Float64(imgViewCount)
         var startTime:Double = 0.0
-
+        
         for _ in 0...(imgViewCount-1)
         {
             do {
@@ -121,11 +115,11 @@ class JDPresentingViewController:UIViewController
         }
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad()
+    override public func viewDidLoad()
     {
         self.PlayerViewContainer.layer.addSublayer(videoLayer)
         //
@@ -165,7 +159,7 @@ class JDPresentingViewController:UIViewController
         timeLineView.backgroundColor = UIColor.white
         timeLineView.layer.cornerRadius = 1.0
         timeLineView.translatesAutoresizingMaskIntoConstraints = false
-        
+        //
         let width = NSLayoutConstraint(item: timeLineView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 6.0)
         timeLineView.addConstraint(width)
         let timeLineHConstraint = NSLayoutConstraint(item: timeLineView, attribute: .height, relatedBy: .equal, toItem: trimViewContainer, attribute: .height, multiplier: 1.0, constant: 0.0)
@@ -176,13 +170,36 @@ class JDPresentingViewController:UIViewController
         SpeedUpButton.layer.cornerRadius = 10.0
         BoomButton.layer.cornerRadius = 10.0
         RecerseButton.layer.cornerRadius = 10.0
+        //PrepareFor Boom
+        BoomPreFactory = JDVideoFactory(type: .Boom, video: self.videoOrigin)
+        BoomPreFactory?.pipeline = self
+        BoomPreFactory?.assetTOcvimgbuffer()
         //
-        self.BoomProgressView.isHidden = false
+        let interval = CMTime(seconds: 0.1,
+                              preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        observer = videoPlayer.addPeriodicTimeObserver(forInterval: interval, queue: DispatchQueue(label: "PlayerQuene"))
+        { [weak self] (time) in
+            if(self?.videoPlayer.currentItem?.status == .readyToPlay)
+            {
+                guard let duration = self?.videoPlayer.currentItem?.asset.duration,let trimview = self?.trimViewContainer,let lineView = self?.timeLineView
+                    else{
+                        return
+                }
+                let totalsecond = CMTimeGetSeconds(duration)
+                let ratio =  Float(CMTimeGetSeconds(time)) / Float(totalsecond)
+                DispatchQueue.main.sync {
+                    self?.LeadingConstraint.constant = CGFloat(Double(trimview.frame.width) * Double(ratio))
+                    lineView.setNeedsLayout()
+                    UIView.animate(withDuration: 0.1, animations: {
+                        lineView.updateConstraintsIfNeeded()
+                    })
+                }
+            }
+        }
     }
     
-    override func viewDidLayoutSubviews() {
+    override public func viewDidLayoutSubviews() {
         videoLayer.frame = CGRect(origin: CGPoint.zero, size: PlayerViewContainer.frame.size)
-        print(#function)
     }
     
     func videoHasBeenChoose(url:URL)
@@ -192,61 +209,78 @@ class JDPresentingViewController:UIViewController
         }
     }
     
-    func ChangeMethd(selected:UIButton)
+    func choosingMethod(newValue:videoProcessType)
     {
+        let old = ChoosingMode
         let array = [SpeedUpButton,BoomButton,RecerseButton]
-        for btn in array
-        {
-            if(selected == btn!)
-            {
-                btn!.layer.borderWidth = 5.0
-                btn!.layer.borderColor = UIColor.red.cgColor
-            }
-            else
-            {
-                btn!.layer.borderWidth = 0.0
-            }
+        array.forEach { (button) in
+            button?.layer.borderWidth = 0.0
         }
+        if(newValue == old)
+        {
+            self.ChoosingMode = .Normal
+            videoPlayer.seek(to: kCMTimeZero) { (bool) in
+                self.videoPlayer.rate = 1.0
+            }
+            return
+        }
+        var targetBtn:UIButton = BoomButton
+        if(newValue == .Speed){ targetBtn = SpeedUpButton }
+        else if(newValue == .Reverse) { targetBtn = RecerseButton }
+        targetBtn.layer.borderWidth = 5.0
+        targetBtn.layer.borderColor = UIColor.red.cgColor
+        self.ChoosingMode = newValue
     }
-    
+
     
     @IBAction func SpeedUpAction(_ sender: Any) {
-        ChangeMethd(selected: SpeedUpButton)
         if videoPlayer.currentItem! != assetitem
         {
             self.videoPlayer.replaceCurrentItem(with: assetitem)
         }
         videoPlayer.seek(to: kCMTimeZero) { (bool) in
+            if(!bool) { print("seek Fail");return }
             self.videoPlayer.rate = 2.0
         }
+        choosingMethod(newValue: .Speed)
     }
     
     @IBAction func BoomerangeAction(_ sender: Any) {
-        ChangeMethd(selected: BoomButton)
         if let item = BoomVideoItem,videoPlayer.currentItem! != item
         {
             self.videoPlayer.replaceCurrentItem(with: item)
             videoPlayer.seek(to: kCMTimeZero) { (bool) in
+                if(!bool) { print("seek Fail"); return }
                 self.videoPlayer.rate = 1.0
             }
         }
+        choosingMethod(newValue: .Boom)
     }
   
     @IBAction func ReverseAction(_ sender: Any)
     {
-        ChangeMethd(selected: RecerseButton)
         if videoPlayer.currentItem! != assetitem
         {
             self.videoPlayer.replaceCurrentItem(with: assetitem)
         }
+    
         videoPlayer.seek(to: videoasset.duration) { (bool) in
+            if(!bool) { print("seek Fail");return }
             self.videoPlayer.rate = -1.0
         }
+        choosingMethod(newValue: .Reverse)
     }
     
+    @IBAction func DismissAction(_ sender: Any)
+    {
+        assetitem.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status),context: &playerItemContext)
+        self.dismiss(animated: true, completion: {
+            
+        })
+    }
     
-    
-    override func observeValue(forKeyPath keyPath: String?,
+
+    override public func observeValue(forKeyPath keyPath: String?,
                                of object: Any?,
                                change: [NSKeyValueChangeKey : Any]?,
                                context: UnsafeMutableRawPointer?) {
@@ -296,13 +330,17 @@ extension JDPresentingViewController:VideoFactoryPipeline
             }
             let asset = AVAsset(url: url)
             self.BoomVideoItem = AVPlayerItem(asset: asset)
+            self.BoomPreFactory = nil
+            
         }
     }
+    
     func reportProgress(_ progress:Progress,_ factory:JDVideoFactory)
     {
         if(factory == BoomPreFactory)
         {
-            DispatchQueue.main.sync {
+            DispatchQueue.main.sync
+            {
                 let progressfloat = Float(progress.completedUnitCount)/Float(progress.totalUnitCount)
                 self.BoomProgressView.progress = progressfloat
             }
@@ -312,8 +350,10 @@ extension JDPresentingViewController:VideoFactoryPipeline
 
 extension JDPresentingViewController:UIGestureRecognizerDelegate
 {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool
     {
+        self.videoPlayer.pause()
+        //
         let location = touch.location(in: trimViewContainer)
         self.StratingTouchX = location.x
         LeadingConstraint.constant = location.x
@@ -330,11 +370,23 @@ extension JDPresentingViewController:UIGestureRecognizerDelegate
         if(state == .changed || state == .began)
         {
             let translation = panG.translation(in: self.trimViewContainer)
-            LeadingConstraint.constant = StratingTouchX + translation.x
-            self.trimViewContainer.updateConstraints()
+            let newPosition = StratingTouchX + translation.x
+            LeadingConstraint.constant = newPosition
+            let ratio = newPosition / self.trimViewContainer.frame.width
+            if(self.videoPlayer.currentItem?.status == .readyToPlay)
+            {
+                guard let duration = self.videoPlayer.currentItem?.asset.duration
+                    else{
+                        return
+                }
+                let newtime = CMTime(value: Int64(CGFloat(duration.value) * ratio), timescale: duration.timescale)
+                self.videoPlayer.seek(to: newtime)
+            }
+            self.timeLineView.updateConstraints()
         }
-        else
+        else if(state == .ended)
         {
+            self.videoPlayer.play()
              panG.setTranslation(CGPoint.zero, in: self.trimViewContainer)
         }
         

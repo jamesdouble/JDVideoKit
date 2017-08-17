@@ -10,6 +10,12 @@ import Foundation
 import AVFoundation
 import CoreVideo
 
+struct VideoOrigin {
+    var mediaType:Any?
+    var mediaUrl:Any?
+    var referenceURL:Any?
+}
+
 protocol VideoFactoryPipeline {
     func bufferHabeBeenTovideo(url:URL,_ factory:JDVideoFactory)
     func reportProgress(_ progress:Progress,_ factory:JDVideoFactory)
@@ -23,6 +29,7 @@ class JDVideoFactory:NSObject
     var cvimgbuffer:[CVImageBuffer] = [CVImageBuffer]()
     var fps:Int = 30
     var type:videoProcessType!
+    var videoAsset:AVAsset?
     
     override init()
     {
@@ -36,19 +43,22 @@ class JDVideoFactory:NSObject
         self.videoorigin = video
     }
     
-    //For Processing Camera Shot
-    init(withBuffer buffer:[CVImageBuffer]) {
-        self.cvimgbuffer = buffer
+    init(type:videoProcessType,video:AVAsset)
+    {
+        super.init()
+        self.type = type
+        self.videoAsset = video
     }
 
     ///2.0
     func assetTOcvimgbuffer()
     {
-        let videoAsset = AVAsset(url: videoorigin?.mediaUrl! as! URL)
-        let trackreader = try! AVAssetReader(asset: videoAsset)
-        let videoTracks = videoAsset.tracks(withMediaType: AVMediaTypeVideo)
+        if(videoAsset == nil) {videoAsset = AVAsset(url: videoorigin?.mediaUrl! as! URL)}
+        let trackreader = try! AVAssetReader(asset: videoAsset!)
+        let videoTracks = videoAsset?.tracks(withMediaType: AVMediaTypeVideo)
+        
         //
-        for track in videoTracks
+        for track in videoTracks!
         {
             let trackoutput:AVAssetReaderTrackOutput = AVAssetReaderTrackOutput(track: track, outputSettings: [
                 String(kCVPixelBufferPixelFormatTypeKey) : Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
@@ -206,6 +216,7 @@ class JDBufferToVideo:NSObject
                     videoWriter.finishWriting {
                         if error == nil {
                             sucess(videoOutputURL)
+                            return
                         }
                     }
                 }
