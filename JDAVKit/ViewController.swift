@@ -10,36 +10,26 @@ import UIKit
 import AVFoundation
 
 class ViewController: UIViewController {
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         let vk = JDVideoKit(delegate: self).getProperVC()
         self.present(vk, animated: true, completion: nil)
         
+        let vk2 = JDVideoKit(delegate: self)
+        vk2.getVideoDirectly { (progress) in
+            
+        }
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-
 }
-
 extension ViewController:JDVideoKitDelegate
 {
-    
     func videoResource(forkit kit: JDVideoKit) -> Any? {
         return nil
     }
-    
     func FinalOutput(final video:AVAsset,url:URL)
     {
         
+    }
+    func ConvertType(forVideo resource: Any, forkit: JDVideoKit) -> videoProcessType {
+        return .Boom
     }
 }
