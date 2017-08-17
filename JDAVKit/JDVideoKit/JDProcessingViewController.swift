@@ -32,10 +32,10 @@ public class JDProcessingViewController:UIViewController
     //
     @IBOutlet weak var libraryButton: UIButton!
     @IBOutlet weak var progressView: UIProgressView!
-    @IBOutlet weak var captureKnob: UIButton!
     @IBOutlet weak var sessionLayer: UIView!
     @IBOutlet weak var SwitchCamVIew: SwitchIconDraw!
     @IBOutlet weak var FlashView: FlashIconDraw!
+    @IBOutlet weak var RecordView: RecordIconDraw!
 
     
     func videoHasBeenSelect(video:VideoOrigin)
@@ -50,7 +50,7 @@ public class JDProcessingViewController:UIViewController
         }
     }
     
-    
+    /////////////////////////////////////////////////////////////////////
     
     override public func viewWillAppear(_ animated: Bool) {
         if(captureSession != nil)
@@ -83,9 +83,11 @@ public class JDProcessingViewController:UIViewController
         SwitchCamVIew.addGestureRecognizer(tap)
         let tap2 = UITapGestureRecognizer(target: self, action: #selector(self.openFlash(_:)))
         FlashView.addGestureRecognizer(tap2)
+        let tap3 = UITapGestureRecognizer(target: self, action: #selector(self.startRecord(_:)))
+        RecordView.addGestureRecognizer(tap3)
     }
     
-    private func openLibrary(_ sender: Any) {
+    @IBAction func openLibrary(_ sender: Any) {
         imgPickerVC = UIImagePickerController()
         imgPickerVC?.delegate = self
         imgPickerVC?.sourceType = .photoLibrary
@@ -131,9 +133,8 @@ public class JDProcessingViewController:UIViewController
     }
 
     
-    @IBAction func startRecord(_ sender: Any)
+    func startRecord(_ sender: Any)
     {
-        (sender as! UIButton).isUserInteractionEnabled = false
         progressView.alpha = 1.0
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
         let videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent(filename))
@@ -167,7 +168,6 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
     {
         let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: outputFileURL, referenceURL: nil)
         self.videoHasBeenSelect(video: videoorigin)
-        self.captureKnob.isUserInteractionEnabled = true
         self.progressView.progress = 0
     }
     

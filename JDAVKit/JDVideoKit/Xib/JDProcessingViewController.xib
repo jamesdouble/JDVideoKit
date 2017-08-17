@@ -14,8 +14,8 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="JDProcessingViewController" customModule="JDVideoKit" customModuleProvider="target">
             <connections>
                 <outlet property="FlashView" destination="DMy-QL-t7c" id="wO3-DZ-g3P"/>
+                <outlet property="RecordView" destination="KaS-Um-ERM" id="PxB-9U-jXt"/>
                 <outlet property="SwitchCamVIew" destination="Ame-dX-xA7" id="Tia-ZS-xPD"/>
-                <outlet property="captureKnob" destination="VLK-ci-c6T" id="Sj4-KG-9pu"/>
                 <outlet property="libraryButton" destination="dgQ-va-0au" id="1lg-hL-gxV"/>
                 <outlet property="progressView" destination="K3a-GC-U1P" id="LE1-AF-YZM"/>
                 <outlet property="sessionLayer" destination="vdI-F3-g3Y" id="0WC-Xz-4dC"/>
@@ -58,18 +58,14 @@
                                 <action selector="openLibrary:" destination="-1" eventType="touchUpInside" id="0WV-F9-cIu"/>
                             </connections>
                         </button>
-                        <button opaque="NO" alpha="0.5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VLK-ci-c6T">
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KaS-Um-ERM" customClass="RecordIconDraw" customModule="JDVideoKit" customModuleProvider="target">
                             <rect key="frame" x="162.5" y="22" width="50" height="50"/>
                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             <constraints>
-                                <constraint firstAttribute="width" constant="50" id="fog-5t-jXr"/>
-                                <constraint firstAttribute="width" secondItem="VLK-ci-c6T" secondAttribute="height" multiplier="1:1" id="zdb-X8-ntS"/>
+                                <constraint firstAttribute="width" constant="50" id="GGE-Gs-kqk"/>
+                                <constraint firstAttribute="width" secondItem="KaS-Um-ERM" secondAttribute="height" multiplier="1:1" id="tVX-Jh-Qsa"/>
                             </constraints>
-                            <state key="normal" image="Record"/>
-                            <connections>
-                                <action selector="startRecord:" destination="-1" eventType="touchUpInside" id="Ge8-Jv-UQZ"/>
-                            </connections>
-                        </button>
+                        </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Ame-dX-xA7" customClass="SwitchIconDraw" customModule="JDVideoKit" customModuleProvider="target">
                             <rect key="frame" x="308" y="32.5" width="40" height="29"/>
                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -81,14 +77,14 @@
                     </subviews>
                     <color key="backgroundColor" red="0.4392156862745098" green="0.44705882352941173" blue="0.61960784313725492" alpha="0.29814513036809814" colorSpace="calibratedRGB"/>
                     <constraints>
-                        <constraint firstItem="dgQ-va-0au" firstAttribute="width" secondItem="VLK-ci-c6T" secondAttribute="width" id="3bO-DS-Yhb"/>
-                        <constraint firstItem="dgQ-va-0au" firstAttribute="centerY" secondItem="VLK-ci-c6T" secondAttribute="centerY" id="Hf0-WR-TI3"/>
+                        <constraint firstItem="KaS-Um-ERM" firstAttribute="centerX" secondItem="JkD-0N-qSH" secondAttribute="centerX" id="Alk-GQ-V3Z"/>
+                        <constraint firstItem="KaS-Um-ERM" firstAttribute="centerY" secondItem="JkD-0N-qSH" secondAttribute="centerY" id="Sf7-bP-jgp"/>
                         <constraint firstItem="Ame-dX-xA7" firstAttribute="centerY" secondItem="JkD-0N-qSH" secondAttribute="centerY" id="ZU4-9g-Mqp"/>
-                        <constraint firstItem="VLK-ci-c6T" firstAttribute="centerY" secondItem="JkD-0N-qSH" secondAttribute="centerY" id="mkO-f1-HCe"/>
-                        <constraint firstItem="VLK-ci-c6T" firstAttribute="centerX" secondItem="JkD-0N-qSH" secondAttribute="centerX" id="sWe-w8-PDS"/>
+                        <constraint firstItem="dgQ-va-0au" firstAttribute="centerY" secondItem="KaS-Um-ERM" secondAttribute="centerY" id="ZbE-TX-h0f"/>
+                        <constraint firstItem="dgQ-va-0au" firstAttribute="width" secondItem="KaS-Um-ERM" secondAttribute="width" id="kVp-ho-hMY"/>
                         <constraint firstAttribute="trailing" secondItem="Ame-dX-xA7" secondAttribute="trailing" constant="27" id="uqq-uo-Cv1"/>
                         <constraint firstItem="dgQ-va-0au" firstAttribute="leading" secondItem="JkD-0N-qSH" secondAttribute="leading" constant="27" id="vTS-JQ-YyW"/>
-                        <constraint firstItem="dgQ-va-0au" firstAttribute="height" secondItem="VLK-ci-c6T" secondAttribute="height" id="xoQ-2W-FuG"/>
+                        <constraint firstItem="dgQ-va-0au" firstAttribute="height" secondItem="KaS-Um-ERM" secondAttribute="height" id="yld-Fn-ce3"/>
                     </constraints>
                 </view>
                 <progressView opaque="NO" alpha="0.0" contentMode="scaleToFill" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="K3a-GC-U1P">
@@ -120,7 +116,4 @@
             <point key="canvasLocation" x="34" y="-9"/>
         </view>
     </objects>
-    <resources>
-        <image name="Record" width="50" height="50"/>
-    </resources>
 </document>

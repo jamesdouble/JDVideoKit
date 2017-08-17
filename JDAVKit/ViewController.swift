@@ -18,7 +18,8 @@ class ViewController: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        let vk = JDVideoKit(delegate: self)
+        let vk = JDVideoKit(delegate: self).getProperVC()
+        self.present(vk, animated: true, completion: nil)
         
     }
 
@@ -32,6 +33,7 @@ class ViewController: UIViewController {
 
 extension ViewController:JDVideoKitDelegate
 {
+    
     func videoResource(forkit kit: JDVideoKit) -> Any? {
         return nil
     }

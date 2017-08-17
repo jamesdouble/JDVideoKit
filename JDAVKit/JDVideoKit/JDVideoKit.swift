@@ -13,7 +13,7 @@ public protocol JDVideoKitDelegate {
     //If return nil means call JDProcessingViewController
     func videoResource(forkit kit:JDVideoKit)->Any?
     //Only will call when above function return nil. Can make some setting for JDProcessingViewController
-    func willPresent(cameraViewController vc:JDProcessingViewController)->JDProcessingViewController
+    func willPresent(cameraViewController vc:JDProcessingViewController,forkit:JDVideoKit)->JDProcessingViewController
     
     //Can make some setting for JDPresentingViewController, if return nil jump to next delegate
     func willPresent(edtingViewController vc:JDPresentingViewController,originVideo:AVAsset,forkit:JDVideoKit)->JDPresentingViewController?
@@ -27,7 +27,7 @@ public protocol JDVideoKitDelegate {
 
 extension JDVideoKitDelegate
 {
-    func willPresent(cameraViewController vc:JDProcessingViewController)->JDProcessingViewController
+    func willPresent(cameraViewController vc:JDProcessingViewController,forkit:JDVideoKit)->JDProcessingViewController
     {
         return vc
     }
@@ -94,13 +94,25 @@ public class JDVideoKit:NSObject
         {
             //User don't have Video Source, go to JDProcessingVC First
             let jdprocessingVC = JDProcessingViewController(nibName: "JDProcessingViewController", bundle: nil)
-            let processingVC = delegate.willPresent(cameraViewController: jdprocessingVC)
+            let processingVC = delegate.willPresent(cameraViewController: jdprocessingVC, forkit: self)
             processingVC.delegate = self
             targetVC = processingVC
         }
         return targetVC
     }
     
+}
+
+extension JDVideoKit:JDProcessingViewControllerDlegate
+{
+    func VideoHasBeenSelect(video: VideoOrigin)->JDPresentingViewController?
+    {
+        //Edting?
+        let targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
+        let asset = AVAsset(url: video.mediaUrl! as! URL)
+        let presentingVC = self.delegate.willPresent(edtingViewController: targetVC, originVideo: asset, forkit: self)
+        return presentingVC
+    }
 }
 
 extension JDVideoKit:VideoFactoryPipeline
@@ -143,17 +155,7 @@ extension JDVideoKit:VideoFactoryPipeline
     }
 }
 
-extension JDVideoKit:JDProcessingViewControllerDlegate
-{
-    func VideoHasBeenSelect(video: VideoOrigin)->JDPresentingViewController?
-    {
-        //Edting?
-        let targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
-        let asset = AVAsset(url: video.mediaUrl! as! URL)
-        let presentingVC = self.delegate.willPresent(edtingViewController: targetVC, originVideo: asset, forkit: self)
-        return presentingVC
-    }
-}
+
 
 
 
