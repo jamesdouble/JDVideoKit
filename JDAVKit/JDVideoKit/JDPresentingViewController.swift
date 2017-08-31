@@ -18,11 +18,17 @@ public enum videoProcessType
     case Reverse
 }
 
+protocol JDPresentingViewControllerDlegate {
+    func Converted(video:URL,chooseType:videoProcessType,by:JDPresentingViewController)
+}
+
 public class JDPresentingViewController:UIViewController
 {
+    var delegate:JDPresentingViewControllerDlegate!
     //播放器相關
     var assetitem:AVPlayerItem!
     var BoomVideoItem:AVPlayerItem?
+    var BoomVideoUrl:URL?
     let videoLayer:AVPlayerLayer
     let videoPlayer:AVPlayer
     //影片檔案相關
@@ -48,6 +54,14 @@ public class JDPresentingViewController:UIViewController
     //
     var timeLineView:UIView = UIView()
     var LeadingConstraint:NSLayoutConstraint!
+    var indicatorView:UIActivityIndicatorView?
+    
+    func videoHasBeenChoose(url:URL)
+    {
+        self.delegate.Converted(video: url, chooseType: ChoosingMode, by: self)
+    }
+    
+    ////////////////////////////////////////
     
     init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?,video:AVAsset)
     {
@@ -57,12 +71,6 @@ public class JDPresentingViewController:UIViewController
         videoPlayer = AVPlayer(playerItem: assetitem)
         videoLayer = AVPlayerLayer(player: videoPlayer)
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        
-        assetitem.addObserver(self,
-                              forKeyPath: #keyPath(AVPlayerItem.status),
-                              options: [.old, .new],
-                              context: &playerItemContext)
-        generateThumb()
     }
     
     init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?,video:VideoOrigin)
@@ -78,13 +86,9 @@ public class JDPresentingViewController:UIViewController
         videoPlayer = AVPlayer(playerItem: assetitem)
         videoLayer = AVPlayerLayer(player: videoPlayer)
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        
-        assetitem.addObserver(self,
-                              forKeyPath: #keyPath(AVPlayerItem.status),
-                              options: [.old, .new],
-                              context: &playerItemContext)
-        generateThumb()
     }
+    
+    
     
     func generateThumb()
     {
@@ -121,6 +125,11 @@ public class JDPresentingViewController:UIViewController
     
     override public func viewDidLoad()
     {
+        assetitem.addObserver(self,
+                              forKeyPath: #keyPath(AVPlayerItem.status),
+                              options: [.old, .new],
+                              context: &playerItemContext)
+        generateThumb()
         self.PlayerViewContainer.layer.addSublayer(videoLayer)
         //
         var lastimgView:UIImageView?
@@ -201,14 +210,7 @@ public class JDPresentingViewController:UIViewController
     override public func viewDidLayoutSubviews() {
         videoLayer.frame = CGRect(origin: CGPoint.zero, size: PlayerViewContainer.frame.size)
     }
-    
-    func videoHasBeenChoose(url:URL)
-    {
-        PhotoAlbum.shared.save(url) { (success, error) in
-            
-        }
-    }
-    
+  
     func choosingMethod(newValue:videoProcessType)
     {
         let old = ChoosingMode
@@ -231,6 +233,30 @@ public class JDPresentingViewController:UIViewController
         targetBtn.layer.borderColor = UIColor.red.cgColor
         self.ChoosingMode = newValue
     }
+    
+    @IBAction func SaveAction(_ sender: Any) {
+        if(indicatorView == nil)
+        {
+            indicatorView = UIActivityIndicatorView(activityIndicatorStyle: .whiteLarge)
+            indicatorView?.frame = self.view.frame
+            indicatorView?.startAnimating()
+            self.view.addSubview(indicatorView!)
+        }
+        self.videoPlayer.pause()
+        if(self.ChoosingMode == .Boom)
+        {
+            guard let boomurl = BoomVideoUrl
+            else{
+                fatalError()
+            }
+            self.delegate.Converted(video: boomurl, chooseType: .Boom, by: self)
+            return
+        }
+        FinalvideoFactory = JDVideoFactory(type: self.ChoosingMode, video: self.assetitem.asset)
+        FinalvideoFactory?.pipeline = self
+        FinalvideoFactory?.assetTOcvimgbuffer()
+    }
+    
 
     
     @IBAction func SpeedUpAction(_ sender: Any) {
@@ -323,15 +349,21 @@ extension JDPresentingViewController:VideoFactoryPipeline
 {
     func bufferHabeBeenTovideo(url:URL,_ factory:JDVideoFactory)
     {
+        indicatorView?.removeFromSuperview()
+        indicatorView = nil
         if(factory == BoomPreFactory)
         {
             DispatchQueue.main.sync {
                 self.BoomProgressView.removeFromSuperview()
             }
             let asset = AVAsset(url: url)
+            self.BoomVideoUrl = url
             self.BoomVideoItem = AVPlayerItem(asset: asset)
             self.BoomPreFactory = nil
-            
+        }
+        else if(factory == FinalvideoFactory)
+        {
+            self.delegate.Converted(video: url, chooseType: self.ChoosingMode, by: self)
         }
     }
     
@@ -344,6 +376,10 @@ extension JDPresentingViewController:VideoFactoryPipeline
                 let progressfloat = Float(progress.completedUnitCount)/Float(progress.totalUnitCount)
                 self.BoomProgressView.progress = progressfloat
             }
+        }
+        else if(factory == FinalvideoFactory)
+        {
+            
         }
     }
 }

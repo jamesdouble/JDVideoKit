@@ -1,6 +1,6 @@
-![Alt text](https://raw.githubusercontent.com/jamesdouble/JDVideoKit/master/Readme_img/logo.png?token=AJBUU5gmbNsF0N3vztr8i0SF0ctX6HR5ks5Znj7cwA%3D%3D)
+![Alt text](https://raw.githubusercontent.com/jamesdouble/JDVideoKit/master/Readme_img/logo.png)
 
-**JDVideoKit** 
+# JDVideoKit
 
 ![Alt text](https://img.shields.io/badge/SwiftVersion-3.0+-red.svg?link=http://left&link=http://right)
 ![Alt text](https://img.shields.io/badge/IOSVersion-9.0+-green.svg)
@@ -30,7 +30,7 @@ public protocol JDVideoKitDelegate {
     func willPresent(cameraViewController vc:JDProcessingViewController,forkit:JDVideoKit)->JDProcessingViewController
     
     //3.Can make some setting for JDPresentingViewController, if return nil jump to next delegate
-    func willPresent(edtingViewController vc:JDPresentingViewController,originVideo:AVAsset,forkit:JDVideoKit)->JDPresentingViewController?
+    func willPresent(edtingViewController vc:JDPresentingViewController,lastVC:UIViewController?,forkit:JDVideoKit)->JDPresentingViewController?
     
     //4.Set your type
     func ConvertType(forVideo resource:Any,forkit:JDVideoKit)->videoProcessType
@@ -45,19 +45,22 @@ public protocol JDVideoKitDelegate {
 
 Return the video resource if you allready have one and Skip to Delegate 3.
 
+**Resource Allow Type : URL , AVAsset**
+
 Return nil, will call Capturing Layout.
 	 
 2. ***(Optional)***
 
-You can make some setting to customize [ProcessingViewController](#convert-video-directly) and return it.
+You can make some setting to customize [ProcessingViewController](#ProcessingViewController) and return it.
 
 3. ***(Optional)***
 
-Call when Capturing Finish.
+Call when Capturing Finish or delegate provide an avaliable video.
 
-You can make some setting to customize [PresentingViewController](#convert-video-directly) and return it.
+You can make some setting to customize [PresentingViewController](#PresentingViewController) and return it.
 
-Return nil if you don't need edting layout and end it here.
+Return nil if you don't need edting layout and end it here , skip to 5.  
+**If you use capturing Layout before and you won't use editing Layout next, you should use the para "LastVC" to dissmiss it or whatever you want**
 
 4. ***(Optional)***
 
@@ -65,10 +68,12 @@ Specific the Convert type. **(.Boom , .Speed , .Reverse)**
 
 5. ***(NonOptional)*** 
 
-Call When user click save button in Editing Layout or direct transfer complete.
+Call When user click save button in Editing Layout, Capturing without editng or direct transfer complete.
 
----
-### Use My Two Layout -> Implement 1 , 5
+---  
+### Use My Two Layout
+####  -> Implement 1 , 5
+
 ```swift
 class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
@@ -76,19 +81,21 @@ class ViewController: UIViewController {
         self.present(vk, animated: true, completion: nil)
     }
 }
-extension ViewController:JDVideoKitDelegate
-{
+extension ViewController:JDVideoKitDelegate{
     func videoResource(forkit kit: JDVideoKit) -> Any? {
         return nil
     }
-    func FinalOutput(final video:AVAsset,url:URL)
-    {
+    func FinalOutput(final video:AVAsset,url:URL){
         print(url)
     }
 }
 ```
 
-### Use Only Capturing Layout -> Implement 1 , 3 , 4 , 5
+### Use Only Capturing Layout 
+#### -> Implement 1 , 3 , 4 , 5
+
+**Notice** : You may need to dissmiss the ProcessingVC or it keep on screen. 
+
 ```swift
 class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
@@ -103,9 +110,11 @@ extension ViewController:JDVideoKitDelegate
     }
     func FinalOutput(final video:AVAsset,url:URL)
     {
-        
+        /// You will get a Video, you capture by my layout and convert 
+        /// To the type you specific.
     }
-    func willPresent(edtingViewController vc: JDPresentingViewController, originVideo: AVAsset, forkit: JDVideoKit) -> JDPresentingViewController? {
+    func willPresent(edtingViewController vc:JDPresentingViewController,lastVC:UIViewController?,forkit:JDVideoKit)->JDPresentingViewController? {
+    	lastVC.dissmiss(...)
         return nil
     }
     func ConvertType(forVideo resource: Any, forkit: JDVideoKit) -> videoProcessType {
@@ -114,8 +123,8 @@ extension ViewController:JDVideoKitDelegate
 }
 ```
 
-### Use Only Editing Layout -> Implement 1 , 5
-
+### Use Only Editing Layout 
+#### -> Implement 1 , 5
 ```swift
 class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
@@ -135,7 +144,8 @@ extension ViewController:JDVideoKitDelegate
 }
 ```
 
-### Convert Video Directly -> Implement 1 , 4 , 5
+### Convert Video Directly
+#### -> Implement 1 , 4 , 5 
 ```swift
 class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
@@ -160,3 +170,5 @@ extension ViewController:JDVideoKitDelegate
 }
 
 ```
+
+##

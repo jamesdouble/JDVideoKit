@@ -13,9 +13,11 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="JDProcessingViewController" customModule="JDVideoKit" customModuleProvider="target">
             <connections>
+                <outlet property="DownViewContainer" destination="JkD-0N-qSH" id="igy-dx-O7X"/>
                 <outlet property="FlashView" destination="DMy-QL-t7c" id="wO3-DZ-g3P"/>
                 <outlet property="RecordView" destination="KaS-Um-ERM" id="PxB-9U-jXt"/>
                 <outlet property="SwitchCamVIew" destination="Ame-dX-xA7" id="Tia-ZS-xPD"/>
+                <outlet property="UpperViewContainer" destination="Idv-fi-naF" id="RJm-mo-mUf"/>
                 <outlet property="libraryButton" destination="dgQ-va-0au" id="1lg-hL-gxV"/>
                 <outlet property="progressView" destination="K3a-GC-U1P" id="LE1-AF-YZM"/>
                 <outlet property="sessionLayer" destination="vdI-F3-g3Y" id="0WC-Xz-4dC"/>
@@ -32,10 +34,10 @@
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                 </view>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Idv-fi-naF" userLabel="UpperBG">
-                    <rect key="frame" x="-0.5" y="0.0" width="375" height="47"/>
+                    <rect key="frame" x="-0.5" y="0.0" width="375" height="67"/>
                     <subviews>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DMy-QL-t7c" customClass="FlashIconDraw" customModule="JDVideoKit" customModuleProvider="target">
-                            <rect key="frame" x="177.5" y="6.5" width="20" height="33"/>
+                            <rect key="frame" x="177.5" y="27" width="20" height="33"/>
                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             <constraints>
                                 <constraint firstAttribute="width" constant="20" id="ZDD-5u-qlb"/>
@@ -44,9 +46,9 @@
                     </subviews>
                     <color key="backgroundColor" red="0.43921568630000002" green="0.44705882349999998" blue="0.61960784310000006" alpha="0.29814513040000001" colorSpace="calibratedRGB"/>
                     <constraints>
-                        <constraint firstItem="DMy-QL-t7c" firstAttribute="height" secondItem="Idv-fi-naF" secondAttribute="height" multiplier="0.7" id="EOK-me-XqS"/>
+                        <constraint firstItem="DMy-QL-t7c" firstAttribute="height" secondItem="Idv-fi-naF" secondAttribute="height" multiplier="0.7" constant="-14" id="EOK-me-XqS"/>
                         <constraint firstItem="DMy-QL-t7c" firstAttribute="centerX" secondItem="Idv-fi-naF" secondAttribute="centerX" id="g83-wl-Q8c"/>
-                        <constraint firstItem="DMy-QL-t7c" firstAttribute="centerY" secondItem="Idv-fi-naF" secondAttribute="centerY" id="hrd-OL-USr"/>
+                        <constraint firstItem="DMy-QL-t7c" firstAttribute="centerY" secondItem="Idv-fi-naF" secondAttribute="centerY" constant="10" id="hrd-OL-USr"/>
                     </constraints>
                 </view>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JkD-0N-qSH" userLabel="BottomBG">
@@ -88,7 +90,7 @@
                     </constraints>
                 </view>
                 <progressView opaque="NO" alpha="0.0" contentMode="scaleToFill" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="K3a-GC-U1P">
-                    <rect key="frame" x="15" y="47" width="345" height="5"/>
+                    <rect key="frame" x="15" y="67" width="345" height="5"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="5" id="teJ-W7-T0U"/>
                     </constraints>
@@ -97,7 +99,7 @@
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
             <constraints>
-                <constraint firstItem="Idv-fi-naF" firstAttribute="height" secondItem="hDI-k5-6j1" secondAttribute="height" multiplier="40:568" id="2Cj-g9-nFD"/>
+                <constraint firstItem="Idv-fi-naF" firstAttribute="height" secondItem="hDI-k5-6j1" secondAttribute="height" multiplier="40:568" constant="20" id="2Cj-g9-nFD"/>
                 <constraint firstItem="JkD-0N-qSH" firstAttribute="width" secondItem="hDI-k5-6j1" secondAttribute="width" id="6a3-av-MyM"/>
                 <constraint firstItem="JkD-0N-qSH" firstAttribute="centerX" secondItem="hDI-k5-6j1" secondAttribute="centerX" id="7Xx-3g-HEa"/>
                 <constraint firstItem="Idv-fi-naF" firstAttribute="centerX" secondItem="hDI-k5-6j1" secondAttribute="centerX" id="8De-zY-fzh"/>

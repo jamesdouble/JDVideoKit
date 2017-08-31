@@ -28,9 +28,7 @@ class IconDraw: UIView {
 
 @IBDesignable class FlashIconDraw:IconDraw
 {
-    @IBInspectable var testcolor:UIColor = UIColor.black
-    
-    
+    var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
     {
         let originWidth:CGFloat = 30
@@ -45,12 +43,11 @@ class IconDraw: UIView {
         return CGPoint(x: sx, y: sy)
     }
     
-
     override func draw(_ rect: CGRect) {
-        let layers = CAShapeLayer()
-        layers.fillColor = UIColor.white.cgColor
-        layers.path = drawCanvas1()
-        self.layer.addSublayer(layers)
+        let iconlayers = CAShapeLayer()
+        iconlayers.fillColor = iconcolor
+        iconlayers.path = drawCanvas1()
+        self.layer.addSublayer(iconlayers)
     }
     
     func drawCanvas1()->CGPath
@@ -89,7 +86,7 @@ class IconDraw: UIView {
 
 @IBDesignable class SwitchIconDraw:IconDraw
 {
- 
+    var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
     {
         let originWidth:CGFloat = 40
@@ -106,12 +103,12 @@ class IconDraw: UIView {
     
     override func draw(_ rect: CGRect) {
         let layers = CAShapeLayer()
-        layers.fillColor = UIColor.white.cgColor
+        layers.fillColor = iconcolor
         layers.path = drawCanvas1()
         self.layer.addSublayer(layers)
         
         let layers2 = CAShapeLayer()
-        layers2.fillColor = UIColor.white.cgColor
+        layers2.fillColor = iconcolor
         layers2.path = drawCanvas2()
         self.layer.addSublayer(layers2)
     }
@@ -176,7 +173,7 @@ class IconDraw: UIView {
 
 @IBDesignable class BackIconDraw:IconDraw
 {
-
+    var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
     {
         let originWidth:CGFloat = 50
@@ -304,8 +301,7 @@ class IconDraw: UIView {
 
 @IBDesignable class RecordIconDraw:IconDraw
 {
-    @IBInspectable var testcolor:UIColor = UIColor.black
-    
+    var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
     {
         let originWidth:CGFloat = 50
@@ -322,12 +318,12 @@ class IconDraw: UIView {
     
     override func draw(_ rect: CGRect) {
         let layers = CAShapeLayer()
-        layers.fillColor = UIColor.white.cgColor
+        layers.fillColor = iconcolor
         layers.path = drawCanvas1()
         self.layer.addSublayer(layers)
         
         let layers2 = CAShapeLayer()
-        layers2.fillColor = UIColor.white.cgColor
+        layers2.fillColor = iconcolor
         layers2.path = drawCanvas2()
         self.layer.addSublayer(layers2)
 

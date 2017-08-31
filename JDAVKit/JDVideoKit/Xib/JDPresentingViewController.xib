@@ -30,7 +30,7 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="g9p-qQ-R5N" userLabel="TopView">
                     <rect key="frame" x="0.0" y="10" width="375" height="40"/>
                     <subviews>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="分享" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vg9-lO-uk2">
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Share" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vg9-lO-uk2">
                             <rect key="frame" x="-0.5" y="9" width="375" height="21"/>
                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                             <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -40,6 +40,9 @@
                             <rect key="frame" x="320" y="3" width="40" height="34"/>
                             <fontDescription key="fontDescription" type="system" pointSize="18"/>
                             <state key="normal" title="Save"/>
+                            <connections>
+                                <action selector="SaveAction:" destination="-1" eventType="touchUpInside" id="va8-6n-Wh1"/>
+                            </connections>
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8fq-jF-ya9">
                             <rect key="frame" x="15" y="5" width="30" height="30"/>
@@ -188,7 +191,6 @@
                     </subviews>
                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     <constraints>
-                        <constraint firstItem="ydc-vt-ehH" firstAttribute="width" secondItem="QF5-ce-7GL" secondAttribute="width" id="2E9-jD-y6V"/>
                         <constraint firstItem="1Ci-xr-PqG" firstAttribute="centerY" secondItem="vcP-RV-Iht" secondAttribute="centerY" id="3yq-SN-0uu"/>
                         <constraint firstItem="ydc-vt-ehH" firstAttribute="centerY" secondItem="QF5-ce-7GL" secondAttribute="centerY" id="5dE-YN-b7Q"/>
                         <constraint firstItem="QF5-ce-7GL" firstAttribute="height" secondItem="g33-H0-Q3B" secondAttribute="height" id="8v6-YP-pqf"/>
@@ -207,6 +209,7 @@
                         <constraint firstItem="QF5-ce-7GL" firstAttribute="centerY" secondItem="g33-H0-Q3B" secondAttribute="centerY" id="lv3-bh-blr"/>
                         <constraint firstItem="g33-H0-Q3B" firstAttribute="height" secondItem="JYd-il-lNB" secondAttribute="height" id="msY-Do-15G"/>
                         <constraint firstAttribute="height" constant="120" id="nVx-xl-acb"/>
+                        <constraint firstItem="ydc-vt-ehH" firstAttribute="width" secondItem="g33-H0-Q3B" secondAttribute="width" id="uHH-6X-uei"/>
                         <constraint firstItem="4Zf-eN-3sV" firstAttribute="centerY" secondItem="HB6-JS-LO8" secondAttribute="centerY" id="uc5-tv-GhA"/>
                         <constraint firstItem="QF5-ce-7GL" firstAttribute="width" secondItem="g33-H0-Q3B" secondAttribute="width" id="zbh-hu-mAQ"/>
                     </constraints>

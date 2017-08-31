@@ -49,7 +49,7 @@ class JDVideoFactory:NSObject
         self.type = type
         self.videoAsset = video
     }
-
+    
     ///2.0
     func assetTOcvimgbuffer()
     {
@@ -92,6 +92,22 @@ class JDVideoFactory:NSObject
         {
             cvimgbuffer.reverse()
         }
+        if(self.type == .Boom)
+        {
+           if(cvimgbuffer.count > self.fps * 3)
+           {
+               let slice = cvimgbuffer.dropLast(cvimgbuffer.count - self.fps * 3)
+               cvimgbuffer = Array(slice)
+           }
+           let reverse = cvimgbuffer.reversed()
+           let origin = cvimgbuffer.map({ (buffer) -> CVImageBuffer in
+            return buffer.deepcopy()
+           })
+           cvimgbuffer.append(contentsOf: reverse)
+           cvimgbuffer.append(contentsOf: origin)
+           cvimgbuffer.append(contentsOf: reverse)
+        }
+        
         let jdbuffer = JDBufferToVideo(buffer: cvimgbuffer, fps: Int32(fps))
         if(self.type == .Boom)
         {

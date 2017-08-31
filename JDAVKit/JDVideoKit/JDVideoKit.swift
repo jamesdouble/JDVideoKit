@@ -16,7 +16,7 @@ public protocol JDVideoKitDelegate {
     func willPresent(cameraViewController vc:JDProcessingViewController,forkit:JDVideoKit)->JDProcessingViewController
     
     //Can make some setting for JDPresentingViewController, if return nil jump to next delegate
-    func willPresent(edtingViewController vc:JDPresentingViewController,originVideo:AVAsset,forkit:JDVideoKit)->JDPresentingViewController?
+    func willPresent(edtingViewController vc:JDPresentingViewController,lastVC:UIViewController?,forkit:JDVideoKit)->JDPresentingViewController?
     
     //Set your type
     func ConvertType(forVideo resource:Any,forkit:JDVideoKit)->videoProcessType
@@ -32,7 +32,7 @@ extension JDVideoKitDelegate
         return vc
     }
     
-    func willPresent(edtingViewController vc:JDPresentingViewController,originVideo:AVAsset,forkit:JDVideoKit)->JDPresentingViewController?
+    func willPresent(edtingViewController vc:JDPresentingViewController,lastVC:UIViewController?,forkit:JDVideoKit)->JDPresentingViewController?
     {
         return vc
     }
@@ -58,31 +58,28 @@ public class JDVideoKit:NSObject
     }
     
     
-    func getProperVC()->UIViewController
+    public func getProperVC()->UIViewController
     {
         if let sourcevideo = delegate.videoResource(forkit: self)
         {
             //Skip to Editng
-            var asset:AVAsset!
             if let url = sourcevideo as? URL
             {
-                asset = AVAsset(url: url)
                 let video = VideoOrigin(mediaType: nil, mediaUrl: url, referenceURL: nil)
                 targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
             }
             else if let assets = sourcevideo as? AVAsset
             {
-                asset = assets
                 targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil, video: assets)
             }
             else
             {
                 fatalError("Video Only Support URL or AVAsset")
             }
-            
             //User May Make Some Setting
-            if let presentingVC = delegate.willPresent(edtingViewController: targetVC as! JDPresentingViewController, originVideo: asset, forkit: self)
+            if let presentingVC = delegate.willPresent(edtingViewController: targetVC as! JDPresentingViewController, lastVC: nil, forkit: self)
             {
+                presentingVC.delegate = self
                 targetVC = presentingVC
             }
             else
@@ -105,16 +102,50 @@ public class JDVideoKit:NSObject
 
 extension JDVideoKit:JDProcessingViewControllerDlegate
 {
-    func VideoHasBeenSelect(video: VideoOrigin)->JDPresentingViewController?
+    func VideoHasBeenSelect(video: VideoOrigin,processingVC:UIViewController)->JDPresentingViewController?
     {
         //Edting?
-        let targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
-        let asset = AVAsset(url: video.mediaUrl! as! URL)
-        let presentingVC = self.delegate.willPresent(edtingViewController: targetVC, originVideo: asset, forkit: self)
-        return presentingVC
+        let editingVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
+        if let presentingVC = self.delegate.willPresent(edtingViewController: editingVC, lastVC: processingVC, forkit: self)
+        {
+            presentingVC.delegate = self
+            return presentingVC
+        }
+        self.CapturingTheVideo(video: video.mediaUrl! as! URL)
+        return nil
+    }
+    
+    //Will Call When Capturing Finish, but not go to editing.
+    func CapturingTheVideo(video:URL)
+    {
+        let Type = self.delegate.ConvertType(forVideo: video, forkit: self)
+        if(Type == . Normal)
+        {
+            self.delegate.FinalOutput(final: AVAsset(url: video), url: video)
+        }
+        else
+        {
+           let factory = JDVideoFactory(type: Type, video: VideoOrigin(mediaType: nil, mediaUrl: video, referenceURL: nil))
+            factory.pipeline = self
+            factory.assetTOcvimgbuffer()
+        }
+        
     }
 }
 
+extension JDVideoKit:JDPresentingViewControllerDlegate
+{
+    func Converted(video: URL, chooseType: videoProcessType, by: JDPresentingViewController) {
+        self.delegate.FinalOutput(final: AVAsset(url: video), url: video)
+    }
+}
+
+
+//////////////////////////
+////
+////
+////
+//////////////////////////
 extension JDVideoKit:VideoFactoryPipeline
 {
     public func getVideoDirectly(progress:@escaping (Float)->())

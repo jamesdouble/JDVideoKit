@@ -10,16 +10,13 @@ import UIKit
 import AVFoundation
 
 class ViewController: UIViewController {
+    
     override func viewDidAppear(_ animated: Bool) {
         let vk = JDVideoKit(delegate: self).getProperVC()
         self.present(vk, animated: true, completion: nil)
-        
-        let vk2 = JDVideoKit(delegate: self)
-        vk2.getVideoDirectly { (progress) in
-            
-        }
     }
 }
+
 extension ViewController:JDVideoKitDelegate
 {
     func videoResource(forkit kit: JDVideoKit) -> Any? {
@@ -27,8 +24,13 @@ extension ViewController:JDVideoKitDelegate
     }
     func FinalOutput(final video:AVAsset,url:URL)
     {
-        
+        print(url)
+        PhotoAlbum.shared.save(url) { (success, error) in
+            
+        }
     }
+    
+    
     func ConvertType(forVideo resource: Any, forkit: JDVideoKit) -> videoProcessType {
         return .Boom
     }

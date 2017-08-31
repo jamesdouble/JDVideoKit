@@ -12,7 +12,7 @@ import MobileCoreServices
 
 protocol JDProcessingViewControllerDlegate
 {
-    func VideoHasBeenSelect(video:VideoOrigin)->JDPresentingViewController?
+    func VideoHasBeenSelect(video:VideoOrigin,processingVC:UIViewController)->JDPresentingViewController?
 }
 
 public class JDProcessingViewController:UIViewController
@@ -28,37 +28,42 @@ public class JDProcessingViewController:UIViewController
     fileprivate var filename:String = "RecordVideo.mov"
     fileprivate var camerapostiion:Bool = false
     fileprivate var flashOn:Bool = false
+    fileprivate var sessionSucess:Bool = false
     fileprivate var pinchZoomGesture:UIPinchGestureRecognizer!
     //
     @IBOutlet weak var libraryButton: UIButton!
     @IBOutlet weak var progressView: UIProgressView!
     @IBOutlet weak var sessionLayer: UIView!
+    @IBOutlet weak var UpperViewContainer: UIView!
+    @IBOutlet weak var DownViewContainer: UIView!
     @IBOutlet weak var SwitchCamVIew: SwitchIconDraw!
     @IBOutlet weak var FlashView: FlashIconDraw!
     @IBOutlet weak var RecordView: RecordIconDraw!
-
-    
+    //
+    public var enableFlashLight:Bool = true
+    public var FlashLightIconColor:UIColor = UIColor.black
+    public var SwitchIconColor:UIColor = UIColor.black
+    public var CaptureIconColor:UIColor = UIColor.black
+    public var allowChooseFromLibrary:Bool = true
+    public var BackgroundViewBarColor:UIColor?
+    //
     func videoHasBeenSelect(video:VideoOrigin)
     {
-        if let presenting = delegate?.VideoHasBeenSelect(video: video)
+        if let presenting = delegate?.VideoHasBeenSelect(video: video, processingVC: self)
         {
             self.present(presenting, animated: true, completion: nil)
         }
-        else
-        {
-            self.dismiss(animated: true, completion: nil)
-        }
     }
+    
     
     /////////////////////////////////////////////////////////////////////
     
     override public func viewWillAppear(_ animated: Bool) {
-        if(captureSession != nil)
+        if(sessionSucess)
         {
             captureSession.startRunning()
         }
     }
-    
     override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         preview?.frame = sessionLayer.bounds
@@ -66,25 +71,19 @@ public class JDProcessingViewController:UIViewController
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-
-        PhotoAlbum.shared.getLibraryVideoThumbnail(choose: { (img) in
-            if(img != nil)
-            {
-                self.libraryButton.setImage(UIImage(cgImage: img!), for: .normal)
-                self.libraryButton.imageEdgeInsets = UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
-            }
-        })
         pinchZoomGesture = UIPinchGestureRecognizer(target: self, action: #selector(self.pinchToZoom(_:)))
-        captureSession = AVCaptureSession()
-        prepareSession()
         sessionLayer.addGestureRecognizer(pinchZoomGesture)
+        prepareSession()
         //
-        let tap = UITapGestureRecognizer(target: self, action: #selector(self.ChangeCamera(_:)))
-        SwitchCamVIew.addGestureRecognizer(tap)
-        let tap2 = UITapGestureRecognizer(target: self, action: #selector(self.openFlash(_:)))
-        FlashView.addGestureRecognizer(tap2)
-        let tap3 = UITapGestureRecognizer(target: self, action: #selector(self.startRecord(_:)))
-        RecordView.addGestureRecognizer(tap3)
+        initLibraryButton()
+        initFlashButton()
+        initSwitchButton()
+        initCaptureButton()
+        if let bgcolor = BackgroundViewBarColor
+        {
+            UpperViewContainer.backgroundColor = bgcolor
+            DownViewContainer.backgroundColor = bgcolor
+        }
     }
     
     @IBAction func openLibrary(_ sender: Any) {
@@ -146,6 +145,52 @@ public class JDProcessingViewController:UIViewController
     }
 }
 
+extension JDProcessingViewController
+{
+    func initFlashButton()
+    {
+        if(!enableFlashLight)
+        {
+            FlashView.isHidden = true
+            return
+        }
+        FlashView.iconcolor = FlashLightIconColor.cgColor
+        let tap2 = UITapGestureRecognizer(target: self, action: #selector(self.openFlash(_:)))
+        FlashView.addGestureRecognizer(tap2)
+    }
+    
+    func initSwitchButton()
+    {
+        SwitchCamVIew.iconcolor = SwitchIconColor.cgColor
+        let tap = UITapGestureRecognizer(target: self, action: #selector(self.ChangeCamera(_:)))
+        SwitchCamVIew.addGestureRecognizer(tap)
+    }
+    
+    func initCaptureButton()
+    {
+        RecordView.iconcolor = CaptureIconColor.cgColor
+        let tap3 = UITapGestureRecognizer(target: self, action: #selector(self.startRecord(_:)))
+        RecordView.addGestureRecognizer(tap3)
+    }
+    
+    func initLibraryButton()
+    {
+        if(!allowChooseFromLibrary)
+        {
+            self.libraryButton.isHidden = true
+            return
+        }
+        PhotoAlbum.shared.getLibraryVideoThumbnail(choose: { (img) in
+            if(img != nil)
+            {
+                self.libraryButton.setImage(UIImage(cgImage: img!), for: .normal)
+                self.libraryButton.imageEdgeInsets = UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
+            }
+        })
+        
+    }
+}
+
 extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
 {
     public func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!)
@@ -190,6 +235,7 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
     
     fileprivate func prepareSession()
     {
+        captureSession = AVCaptureSession()
         device = connectedDevice(front: camerapostiion)
         let input = try? AVCaptureDeviceInput(device: device)
         if captureSession.canAddInput(input)
@@ -198,7 +244,7 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
         }
         else { print("captureSession can't add input")
             return}
-        
+        sessionSucess = true
         let audioDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeAudio)
         do {
             let audioInput = try AVCaptureDeviceInput(device: audioDevice)
@@ -207,9 +253,8 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
             print("Unable to add audio device to the recording.")
             return
         }
-        
+        //Quality
         captureSession.sessionPreset = AVCaptureSessionPresetHigh
-       
         /// 4
         dataOutput = AVCaptureMovieFileOutput()
         

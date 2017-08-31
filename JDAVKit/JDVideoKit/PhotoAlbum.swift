@@ -10,7 +10,7 @@ import Photos
 
 class PhotoAlbum: NSObject
 {
-    static let albumName = "ReversedVideos"
+    static let albumName = "JDVideoKit"
     static let shared = PhotoAlbum()
     
     var assetCollection: PHAssetCollection!
