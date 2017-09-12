@@ -51,10 +51,20 @@ public class JDPresentingViewController:UIViewController
     @IBOutlet weak var BoomButton: UIButton!
     @IBOutlet weak var RecerseButton: UIButton!
     @IBOutlet weak var BoomProgressView: UIProgressView!
+    @IBOutlet weak var TopTitleLabel: UILabel!
+    @IBOutlet weak var SaveButton: UIButton!
+    @IBOutlet weak var DismissButton: UIButton!
     //
     var timeLineView:UIView = UIView()
     var LeadingConstraint:NSLayoutConstraint!
     var indicatorView:UIActivityIndicatorView?
+    //UI Setting
+    var topTitle:String = "Share"
+    var CloseIconColor:UIColor = UIColor.white
+    var saveButtonTitle:String = "Save"
+    var savaButtonColor:UIColor = UIColor.white
+    
+    
     
     func videoHasBeenChoose(url:URL)
     {
@@ -125,6 +135,10 @@ public class JDPresentingViewController:UIViewController
     
     override public func viewDidLoad()
     {
+        TopTitleLabel.text = topTitle
+        SaveButton.setTitle(saveButtonTitle, for: .normal)
+        SaveButton.setTitleColor(savaButtonColor, for: .normal)
+        //
         assetitem.addObserver(self,
                               forKeyPath: #keyPath(AVPlayerItem.status),
                               options: [.old, .new],

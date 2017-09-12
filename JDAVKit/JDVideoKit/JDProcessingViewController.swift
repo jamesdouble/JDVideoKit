@@ -42,8 +42,8 @@ public class JDProcessingViewController:UIViewController
     //
     public var enableFlashLight:Bool = true
     public var FlashLightIconColor:UIColor = UIColor.black
-    public var SwitchIconColor:UIColor = UIColor.black
-    public var CaptureIconColor:UIColor = UIColor.black
+    public var SwitchIconColor:UIColor = UIColor.white
+    public var CaptureIconColor:UIColor = UIColor.white
     public var allowChooseFromLibrary:Bool = true
     public var BackgroundViewBarColor:UIColor?
     //

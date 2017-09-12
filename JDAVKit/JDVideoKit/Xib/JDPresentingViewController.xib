@@ -15,9 +15,12 @@
             <connections>
                 <outlet property="BoomButton" destination="4Zf-eN-3sV" id="nxc-ff-bgX"/>
                 <outlet property="BoomProgressView" destination="1jk-0P-uvj" id="0YS-rP-xi3"/>
+                <outlet property="DismissButton" destination="8fq-jF-ya9" id="rnr-YD-5py"/>
                 <outlet property="PlayerViewContainer" destination="29g-BQ-91L" id="Sg9-z4-u3c"/>
                 <outlet property="RecerseButton" destination="EGU-T8-m4E" id="o9c-Fl-Nke"/>
+                <outlet property="SaveButton" destination="6jf-Fv-rnN" id="3nQ-rb-RHT"/>
                 <outlet property="SpeedUpButton" destination="HB6-JS-LO8" id="Mxs-JP-uVD"/>
+                <outlet property="TopTitleLabel" destination="vg9-lO-uk2" id="vRn-ag-nE6"/>
                 <outlet property="trimViewContainer" destination="KoV-0C-0mQ" id="D0C-z2-anf"/>
                 <outlet property="view" destination="iN0-l3-epB" id="aIv-BP-shp"/>
             </connections>
