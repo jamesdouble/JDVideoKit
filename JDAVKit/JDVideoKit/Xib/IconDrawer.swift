@@ -56,7 +56,7 @@ public class IconDraw: UIView {
         //// Group 2
         //// Group 3
         //// Bezier 2 Drawing
-        var bezier2Path = UIBezierPath()
+        let bezier2Path = UIBezierPath()
         bezier2Path.move(to: CGPointMake(29.85, 16.12))
         bezier2Path.addCurve(to: CGPointMake(29.05, 15.67), controlPoint1: CGPointMake(29.71, 15.84), controlPoint2: CGPointMake(29.39, 15.67))
         bezier2Path.addLine(to: CGPointMake(18.6, 15.67))
@@ -208,7 +208,7 @@ public class IconDraw: UIView {
         //// Group 2
         //// Group 3
         //// Bezier 2 Drawing
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPointMake(22.59, 49.63))
         bezierPath.addLine(to: CGPointMake(29, 42.59))
         bezierPath.addLine(to: CGPointMake(12.82, 24.82))
@@ -225,7 +225,7 @@ public class IconDraw: UIView {
     func drawCanvas2()->CGPath
     {
         //// Bezier 2 Drawing
-        var bezier2Path = UIBezierPath()
+        let bezier2Path = UIBezierPath()
         bezier2Path.move(to: CGPointMake(43.59, 0))
         bezier2Path.addLine(to: CGPointMake(21, 24.82))
         bezier2Path.addLine(to: CGPointMake(43.59, 49.63))
@@ -267,7 +267,7 @@ public class IconDraw: UIView {
     
     func drawCanvas1()->CGPath
     {
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPointMake(36.33, 0))
         bezierPath.addCurve(to: CGPointMake(22.66, 24.83), controlPoint1: CGPointMake(28.79, 0), controlPoint2: CGPointMake(22.66, 11.14))
         bezierPath.addCurve(to: CGPointMake(13.67, 41.15), controlPoint1: CGPointMake(22.66, 33.83), controlPoint2: CGPointMake(18.63, 41.15))
@@ -331,7 +331,7 @@ public class IconDraw: UIView {
     
     func drawCanvas1()->CGPath
     {
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPointMake(25, 0))
         bezierPath.addCurve(to: CGPointMake(0, 25), controlPoint1: CGPointMake(11.19, 0), controlPoint2: CGPointMake(0, 11.19))
         bezierPath.addCurve(to: CGPointMake(25, 50), controlPoint1: CGPointMake(0, 38.81), controlPoint2: CGPointMake(11.19, 50))
@@ -352,7 +352,7 @@ public class IconDraw: UIView {
     
     func drawCanvas2()->CGPath
     {
-        var bezier2Path = UIBezierPath()
+        let bezier2Path = UIBezierPath()
         bezier2Path.move(to: CGPointMake(25.33, 7))
         bezier2Path.addCurve(to: CGPointMake(17.72, 8.68), controlPoint1: CGPointMake(22.61, 7), controlPoint2: CGPointMake(20.04, 7.61))
         bezier2Path.addCurve(to: CGPointMake(17.6, 8.73), controlPoint1: CGPointMake(17.68, 8.7), controlPoint2: CGPointMake(17.64, 8.71))

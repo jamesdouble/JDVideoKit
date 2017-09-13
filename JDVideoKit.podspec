@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'JDVideoKit'
-  s.version          = '1.0.0'
+  s.version          = '1.5.0'
   s.summary          = 'You can easily transfer your video into Three common video type.'
  
   s.description      = <<-DESC
@@ -14,6 +14,6 @@ You can use set up camera easily.
   s.source           = { :git => 'https://github.com/jamesdouble/JDVideoKit.git', :tag => s.version.to_s }
  
   s.ios.deployment_target = '8.0'
-  s.source_files = 'JDAVKit/JDVideoKit/*'
+  s.source_files = 'JDAVKit/JDVideoKit/*','JDAVKit/JDVideoKit/Xib/*'
  
 end
