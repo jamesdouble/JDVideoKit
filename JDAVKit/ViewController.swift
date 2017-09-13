@@ -29,8 +29,7 @@ extension ViewController:JDVideoKitDelegate
             
         }
     }
-    
-    
+
     func ConvertType(forVideo resource: Any, forkit: JDVideoKit) -> videoProcessType {
         return .Boom
     }

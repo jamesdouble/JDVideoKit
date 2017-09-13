@@ -25,7 +25,7 @@ public protocol JDVideoKitDelegate {
     func FinalOutput(final video:AVAsset,url:URL)
 }
 
-extension JDVideoKitDelegate
+public extension JDVideoKitDelegate
 {
     func willPresent(cameraViewController vc:JDProcessingViewController,forkit:JDVideoKit)->JDProcessingViewController
     {
@@ -60,17 +60,20 @@ public class JDVideoKit:NSObject
     
     public func getProperVC()->UIViewController
     {
+        let processingBundle = Bundle(for:JDProcessingViewController.classForCoder())
+        let presentingBundle = Bundle(for:JDPresentingViewController.classForCoder())
+        
         if let sourcevideo = delegate.videoResource(forkit: self)
         {
             //Skip to Editng
             if let url = sourcevideo as? URL
             {
                 let video = VideoOrigin(mediaType: nil, mediaUrl: url, referenceURL: nil)
-                targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
+                targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: presentingBundle,video: video)
             }
             else if let assets = sourcevideo as? AVAsset
             {
-                targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil, video: assets)
+                targetVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: presentingBundle, video: assets)
             }
             else
             {
@@ -90,7 +93,8 @@ public class JDVideoKit:NSObject
         else
         {
             //User don't have Video Source, go to JDProcessingVC First
-            let jdprocessingVC = JDProcessingViewController(nibName: "JDProcessingViewController", bundle: nil)
+            
+            let jdprocessingVC = JDProcessingViewController(nibName: "JDProcessingViewController", bundle: processingBundle)
             let processingVC = delegate.willPresent(cameraViewController: jdprocessingVC, forkit: self)
             processingVC.delegate = self
             targetVC = processingVC
@@ -105,7 +109,8 @@ extension JDVideoKit:JDProcessingViewControllerDlegate
     func VideoHasBeenSelect(video: VideoOrigin,processingVC:UIViewController)->JDPresentingViewController?
     {
         //Edting?
-        let editingVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: nil,video: video)
+        let presentingBundle = Bundle(for:JDPresentingViewController.classForCoder())
+        let editingVC = JDPresentingViewController(nibName: "JDPresentingViewController", bundle: presentingBundle,video: video)
         if let presentingVC = self.delegate.willPresent(edtingViewController: editingVC, lastVC: processingVC, forkit: self)
         {
             presentingVC.delegate = self
