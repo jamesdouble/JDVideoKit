@@ -59,10 +59,10 @@ public class JDPresentingViewController:UIViewController
     var LeadingConstraint:NSLayoutConstraint!
     var indicatorView:UIActivityIndicatorView?
     //UI Setting
-    var topTitle:String = "Share"
-    var CloseIconColor:UIColor = UIColor.white
-    var saveButtonTitle:String = "Save"
-    var savaButtonColor:UIColor = UIColor.white
+    public var topTitle:String = "Share"
+    public var CloseIconColor:UIColor = UIColor.white
+    public var saveButtonTitle:String = "Save"
+    public var savaButtonColor:UIColor = UIColor.white
     
     
     
@@ -162,7 +162,7 @@ public class JDPresentingViewController:UIViewController
                 leadingConstant = NSLayoutConstraint(item: uiimgView, attribute: .leading, relatedBy: .equal, toItem: lastimg, attribute: .trailing, multiplier: 1.0, constant: 0.0)
             }
             else
-            {
+            {  
                 leadingConstant = NSLayoutConstraint(item: uiimgView, attribute: .leading, relatedBy: .equal, toItem: trimViewContainer, attribute: .leading, multiplier: 1.0, constant: 0.0)
             }
             
@@ -235,6 +235,7 @@ public class JDPresentingViewController:UIViewController
         if(newValue == old)
         {
             self.ChoosingMode = .Normal
+            self.videoPlayer.replaceCurrentItem(with: assetitem)
             videoPlayer.seek(to: kCMTimeZero) { (bool) in
                 self.videoPlayer.rate = 1.0
             }

@@ -9,7 +9,15 @@
 
 # Introduction
 
+You can easily transfer your video into Three common video type.
 
+You can use set up camera easily.
+
+# Installation
+
+```
+ pod 'JDVideoKit'
+```
 
 # USAGE
 
@@ -20,6 +28,8 @@
 ### 3.[Use Only Editing Layout](#use-only-editing-layout)
 
 ### 4.[Convert Video Directly](#convert-video-directly)
+
+### [Customize your Layout](#customization)
 
 ## Delegate
 
@@ -53,7 +63,7 @@ Return nil, will call Capturing Layout.
 	 
 2. ***(Optional)***
 
-You can make some setting to customize [ProcessingViewController](#ProcessingViewController) and return it.
+You can make some setting to customize [ProcessingViewController](#processingViewController) and return it.
 
 3. ***(Optional)***
 
@@ -174,5 +184,53 @@ extension ViewController:JDVideoKitDelegate
 ```
 
 ---
+### Customization
 
-### ProcessingViewController
+#### ProcessingViewController
+
+Implement this Delegate:
+
+```Swift
+func willPresent(cameraViewController vc:JDProcessingViewController,forkit:JDVideoKit)->JDProcessingViewController
+{
+	///Set Below Variable Like this
+	vc.enableFlashLight = false 
+}
+```
+
+The component you can customize:
+
+```swift
+public var enableFlashLight:Bool = true
+public var FlashLightIconColor:UIColor = UIColor.black
+public var SwitchIconColor:UIColor = UIColor.white
+public var CaptureIconColor:UIColor = UIColor.white
+public var allowChooseFromLibrary:Bool = true
+public var BackgroundViewBarColor:UIColor?
+```
+
+
+![Alt text](https://raw.githubusercontent.com/jamesdouble/JDVideoKit/master/Readme_img/processingVC.png)
+
+#### ProcessingViewController
+
+Implement this Delegate:
+
+```Swift
+func willPresent(edtingViewController vc:JDPresentingViewController,lastVC:UIViewController?,forkit:JDVideoKit)->JDPresentingViewController?
+{
+	vc.topTitle = "Title"
+}
+```
+
+
+The component you can customize:
+
+```swift
+public var topTitle:String = "Share"
+public var CloseIconColor:UIColor = UIColor.white
+public var saveButtonTitle:String = "Save"
+public var savaButtonColor:UIColor = UIColor.white
+```
+
+![Alt text](https://raw.githubusercontent.com/jamesdouble/JDVideoKit/master/Readme_img/presentingVC.png)
