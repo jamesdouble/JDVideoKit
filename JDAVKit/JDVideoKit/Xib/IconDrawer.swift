@@ -8,25 +8,25 @@
 
 import UIKit
 
-class IconDraw: UIView {
+public class IconDraw: UIView {
     override init(frame: CGRect)
     {
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         self.backgroundColor = UIColor.clear
     }
     
-    override func prepareForInterfaceBuilder() {
+    override public func prepareForInterfaceBuilder() {
         self.backgroundColor = UIColor.clear
     }
 
 }
 
-@IBDesignable class FlashIconDraw:IconDraw
+@IBDesignable public class FlashIconDraw:IconDraw
 {
     var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
@@ -43,7 +43,7 @@ class IconDraw: UIView {
         return CGPoint(x: sx, y: sy)
     }
     
-    override func draw(_ rect: CGRect) {
+    override public func draw(_ rect: CGRect) {
         let iconlayers = CAShapeLayer()
         iconlayers.fillColor = iconcolor
         iconlayers.path = drawCanvas1()
@@ -84,7 +84,7 @@ class IconDraw: UIView {
 }
 
 
-@IBDesignable class SwitchIconDraw:IconDraw
+@IBDesignable public class SwitchIconDraw:IconDraw
 {
     var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
@@ -101,7 +101,7 @@ class IconDraw: UIView {
         return CGPoint(x: sx, y: sy)
     }
     
-    override func draw(_ rect: CGRect) {
+    override public func draw(_ rect: CGRect) {
         let layers = CAShapeLayer()
         layers.fillColor = iconcolor
         layers.path = drawCanvas1()
@@ -171,7 +171,7 @@ class IconDraw: UIView {
     }
 }
 
-@IBDesignable class BackIconDraw:IconDraw
+@IBDesignable public class BackIconDraw:IconDraw
 {
     var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
@@ -190,7 +190,7 @@ class IconDraw: UIView {
     
     
     
-    override func draw(_ rect: CGRect) {
+    override public func draw(_ rect: CGRect) {
         let layers = CAShapeLayer()
         layers.fillColor = UIColor.white.cgColor
         layers.path = drawCanvas1()
@@ -240,7 +240,7 @@ class IconDraw: UIView {
     }
 }
 
-@IBDesignable class InfinityIconDraw:IconDraw
+@IBDesignable public class InfinityIconDraw:IconDraw
 {
     @IBInspectable var testcolor:UIColor = UIColor.black
     
@@ -258,7 +258,7 @@ class IconDraw: UIView {
         return CGPoint(x: sx, y: sy)
     }
     
-    override func draw(_ rect: CGRect) {
+    override public func draw(_ rect: CGRect) {
         let layers = CAShapeLayer()
         layers.fillColor = UIColor.white.cgColor
         layers.path = drawCanvas1()
@@ -299,7 +299,7 @@ class IconDraw: UIView {
     }
 }
 
-@IBDesignable class RecordIconDraw:IconDraw
+@IBDesignable public class RecordIconDraw:IconDraw
 {
     var iconcolor:CGColor!
     func CGPointMake(_ x:CGFloat,_ y:CGFloat)->CGPoint
@@ -316,7 +316,7 @@ class IconDraw: UIView {
         return CGPoint(x: sx, y: sy)
     }
     
-    override func draw(_ rect: CGRect) {
+    override public func draw(_ rect: CGRect) {
         let layers = CAShapeLayer()
         layers.fillColor = iconcolor
         layers.path = drawCanvas1()

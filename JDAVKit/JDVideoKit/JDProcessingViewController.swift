@@ -10,6 +10,7 @@ import AVFoundation
 import UIKit
 import MobileCoreServices
 
+
 protocol JDProcessingViewControllerDlegate
 {
     func VideoHasBeenSelect(video:VideoOrigin,processingVC:UIViewController)->JDPresentingViewController?
