@@ -18,13 +18,14 @@ protocol JDProcessingViewControllerDlegate
 
 public class JDProcessingViewController:UIViewController
 {
+    let queue: DispatchQueue = DispatchQueue(label: "VideoOutputQueue")
     var delegate:JDProcessingViewControllerDlegate?
     //
     fileprivate var imgPickerVC:UIImagePickerController?
     fileprivate var preview: AVCaptureVideoPreviewLayer?
     fileprivate var captureSession:AVCaptureSession!
     fileprivate var device:AVCaptureDevice!
-    fileprivate var dataOutput:AVCaptureMovieFileOutput?
+    fileprivate var dataOutput:AVCaptureMovieFileOutput = AVCaptureMovieFileOutput()
     //
     fileprivate var filename:String = "RecordVideo.mov"
     fileprivate var camerapostiion:Bool = false
@@ -65,6 +66,11 @@ public class JDProcessingViewController:UIViewController
             captureSession.startRunning()
         }
     }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        captureSession.stopRunning()
+    }
+    
     override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         preview?.frame = sessionLayer.bounds
@@ -95,12 +101,12 @@ public class JDProcessingViewController:UIViewController
         self.present(imgPickerVC!, animated: true, completion: nil)
     }
     
-    func ChangeCamera(_ sender: Any) {
+    @objc func ChangeCamera(_ sender: Any) {
         camerapostiion = !camerapostiion
         switchCamera()
     }
     
-    func openFlash(_ sender: Any)
+    @objc func openFlash(_ sender: Any)
     {
         try?  device.lockForConfiguration()
         flashOn = !flashOn
@@ -117,7 +123,7 @@ public class JDProcessingViewController:UIViewController
         device.unlockForConfiguration()
     }
     
-    func pinchToZoom(_ sender: UIPinchGestureRecognizer) {
+    @objc func pinchToZoom(_ sender: UIPinchGestureRecognizer) {
         if sender.state == .changed {
             let maxZoomFactor = device.activeFormat.videoMaxZoomFactor
             let pinchVelocityDividerFactor: CGFloat = 5.0
@@ -133,7 +139,7 @@ public class JDProcessingViewController:UIViewController
     }
 
     
-    func startRecord(_ sender: Any)
+    @objc func startRecord(_ sender: Any)
     {
         progressView.alpha = 1.0
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
@@ -141,8 +147,8 @@ public class JDProcessingViewController:UIViewController
         do {
             try FileManager.default.removeItem(at: videoOutputURL)
         } catch {}
-        dataOutput?.maxRecordedDuration = CMTime(seconds: 6.0, preferredTimescale: 30)
-        dataOutput?.startRecording(toOutputFileURL: videoOutputURL, recordingDelegate: self)
+        dataOutput.maxRecordedDuration = CMTime(seconds: 6.0, preferredTimescale: 30)
+        dataOutput.startRecording(to: videoOutputURL, recordingDelegate: self)
     }
 }
 
@@ -182,10 +188,11 @@ extension JDProcessingViewController
             return
         }
         PhotoAlbum.shared.getLibraryVideoThumbnail(choose: { (img) in
-            if(img != nil)
-            {
-                self.libraryButton.setImage(UIImage(cgImage: img!), for: .normal)
-                self.libraryButton.imageEdgeInsets = UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
+            if let image = img {
+                DispatchQueue.main.async {
+                    self.libraryButton.setImage(UIImage(cgImage: image), for: .normal)
+                    self.libraryButton.imageEdgeInsets = UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1)
+                }
             }
         })
         
@@ -194,13 +201,17 @@ extension JDProcessingViewController
 
 extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
 {
-    public func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!)
-    {
-        let queue: DispatchQueue = DispatchQueue(label: "VideoOutputQueue")
+    public func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: outputFileURL, referenceURL: nil)
+        self.videoHasBeenSelect(video: videoorigin)
+        self.progressView.progress = 0
+    }
+    
+    public func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
         queue.async {
-            while(captureOutput.isRecording)
+            while(output.isRecording)
             {
-                let duration = captureOutput.recordedDuration
+                let duration = output.recordedDuration
                 let second = CMTimeGetSeconds(duration)
                 let ratio = second / 6.0
                 DispatchQueue.main.sync {
@@ -209,24 +220,14 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
             }
         }
     }
-    
-    public func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!)
-    {
-        let videoorigin = VideoOrigin(mediaType: nil, mediaUrl: outputFileURL, referenceURL: nil)
-        self.videoHasBeenSelect(video: videoorigin)
-        self.progressView.progress = 0
-    }
-    
+        
     func switchCamera()
     {
         for input in captureSession.inputs
         {
-            if let inputs = input as? AVCaptureInput
-            {
-                captureSession.removeInput(inputs)
-            }
+            captureSession.removeInput(input)
         }
-        let input = try? AVCaptureDeviceInput(device: connectedDevice(front: camerapostiion))
+        guard let input = try? AVCaptureDeviceInput(device: connectedDevice(front: camerapostiion)) else { return }
         if captureSession.canAddInput(input)
         {
             captureSession.addInput(input)
@@ -238,7 +239,7 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
     {
         captureSession = AVCaptureSession()
         device = connectedDevice(front: camerapostiion)
-        let input = try? AVCaptureDeviceInput(device: device)
+        guard let input = try? AVCaptureDeviceInput(device: device) else { return }
         if captureSession.canAddInput(input)
         {
             captureSession.addInput(input)
@@ -246,7 +247,11 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
         else { print("captureSession can't add input")
             return}
         sessionSucess = true
-        let audioDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeAudio)
+       
+        guard let audioDevice = AVCaptureDevice.default(for: .audio) else {
+            print("Unable to add audio device to the recording.")
+            return
+        }
         do {
             let audioInput = try AVCaptureDeviceInput(device: audioDevice)
             self.captureSession.addInput(audioInput)
@@ -255,40 +260,39 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
             return
         }
         //Quality
-        captureSession.sessionPreset = AVCaptureSessionPresetHigh
+        captureSession.sessionPreset = AVCaptureSession.Preset.high
         /// 4
-        dataOutput = AVCaptureMovieFileOutput()
-        
         if captureSession.canAddOutput(dataOutput) {
             captureSession.addOutput(dataOutput)
-        }
-        else { fatalError("captureSession can't add output") }
+        } else { fatalError("captureSession can't add output") }
+        
         captureSession.commitConfiguration()
         captureSession.startRunning()
-        dataOutput?.connection(withMediaType: AVMediaTypeVideo).videoOrientation = .portrait
+        dataOutput.connection(with: .video)?.videoOrientation = .portrait
         ///
         preview = AVCaptureVideoPreviewLayer(session: captureSession)
-        preview?.videoGravity = AVLayerVideoGravityResizeAspectFill
-        preview?.connection.videoOrientation = .portrait
+        preview?.videoGravity = AVLayerVideoGravity.resizeAspectFill
+        preview?.connection?.videoOrientation = .portrait
         sessionLayer.layer.addSublayer(preview!)
     }
     
     fileprivate func connectedDevice(front:Bool) -> AVCaptureDevice! {
         /// 7
-        let postition:AVCaptureDevicePosition = (front) ? .front : .back
+        let postition:AVCaptureDevice.Position = (front) ? .front : .back
         if #available(iOS 10.0, *) {
-            return AVCaptureDevice.defaultDevice(withDeviceType: AVCaptureDeviceType.builtInWideAngleCamera, mediaType: AVMediaTypeVideo, position: postition)
+            return AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: postition)
         }
         else {
-            return AVCaptureDevice.devices()
-                .map { $0 as! AVCaptureDevice }
-                .filter { $0.hasMediaType(AVMediaTypeVideo) && $0.position == postition }.first! as AVCaptureDevice
+            return AVCaptureDevice.devices().filter { $0.hasMediaType(.video) && $0.position == postition }.first! as AVCaptureDevice
         }
     }
 }
 
 extension JDProcessingViewController:UIImagePickerControllerDelegate,UINavigationControllerDelegate
 {
+    
+    
+    
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any])
     {
         picker.dismiss(animated: true) { 

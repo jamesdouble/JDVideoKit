@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'JDVideoKit'
-  s.version          = '1.6.0'
+  s.version          = '1.7.0'
   s.summary          = 'You can easily transfer your video into Three common video type.'
  
   s.description      = <<-DESC

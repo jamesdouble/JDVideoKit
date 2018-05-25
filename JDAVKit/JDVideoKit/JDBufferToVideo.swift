@@ -11,9 +11,9 @@ import AVFoundation
 import CoreVideo
 
 struct VideoOrigin {
-    var mediaType:Any?
-    var mediaUrl:Any?
-    var referenceURL:Any?
+    var mediaType: Any?
+    var mediaUrl: Any?
+    var referenceURL: Any?
 }
 
 protocol VideoFactoryPipeline {
@@ -24,7 +24,6 @@ protocol VideoFactoryPipeline {
 class JDVideoFactory:NSObject
 {
     var pipeline:VideoFactoryPipeline?
-    var buffertoVideo:JDBufferToVideo?
     var videoorigin:VideoOrigin?
     var cvimgbuffer:[CVImageBuffer] = [CVImageBuffer]()
     var fps:Int = 30
@@ -53,12 +52,19 @@ class JDVideoFactory:NSObject
     ///2.0
     func assetTOcvimgbuffer()
     {
-        if(videoAsset == nil) {videoAsset = AVAsset(url: videoorigin?.mediaUrl! as! URL)}
-        let trackreader = try! AVAssetReader(asset: videoAsset!)
-        let videoTracks = videoAsset?.tracks(withMediaType: AVMediaTypeVideo)
-        
+        if videoAsset == nil, let url = videoorigin?.mediaUrl as? URL {
+            videoAsset = AVAsset(url: url)
+        }
+        guard let videoAsset = videoAsset else { fatalError("Asset not found") }
+        let trackreader: AVAssetReader
+        do {
+            trackreader = try AVAssetReader(asset: videoAsset)
+        } catch {
+            fatalError(error.localizedDescription)
+        }
+        let videoTracks = videoAsset.tracks(withMediaType: AVMediaType.video)
         //
-        for track in videoTracks!
+        for track in videoTracks
         {
             let trackoutput:AVAssetReaderTrackOutput = AVAssetReaderTrackOutput(track: track, outputSettings: [
                 String(kCVPixelBufferPixelFormatTypeKey) : Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
@@ -168,7 +174,7 @@ class JDBufferToVideo:NSObject
             try FileManager.default.removeItem(at: videoOutputURL)
         } catch {}
         do {
-            try videoWriter = AVAssetWriter(outputURL: videoOutputURL, fileType: AVFileTypeQuickTimeMovie)
+            try videoWriter = AVAssetWriter(outputURL: videoOutputURL, fileType: .mp4)
         } catch let writerError as NSError {
             error = writerError
             videoWriter = nil
@@ -178,7 +184,7 @@ class JDBufferToVideo:NSObject
         if let videoWriter = videoWriter
         {
             ///Add Input to Writer , AVAssetWriterInput use CVSampleBuffer , AVAssetWriterInputPixelBufferAdaptor use CVPixelBuffer
-            let videoWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: videoSettings)
+            let videoWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
             let pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: videoWriterInput,sourcePixelBufferAttributes: attr)
             guard videoWriter.canAdd(videoWriterInput) else {
                 fatalError("VideoWriter Can't Add")

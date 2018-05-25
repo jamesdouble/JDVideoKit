@@ -412,7 +412,7 @@ extension JDPresentingViewController:UIGestureRecognizerDelegate
         return true
     }
     
-    func dragTimeLine(sender:Any)
+    @objc func dragTimeLine(sender:Any)
     {
         guard let panG = sender as? UIPanGestureRecognizer else {
             return

@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>&quot;JDVideoKit&quot;</string>
-	<key>NSCameraUsageDescription</key>
-	<string>&quot;Test&quot;</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>&quot;Test&quot;</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -26,6 +20,12 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>"Test"</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>"JDVideoKit"</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>"Test"</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
