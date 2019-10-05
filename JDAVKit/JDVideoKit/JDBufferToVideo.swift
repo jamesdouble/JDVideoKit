@@ -195,7 +195,7 @@ class JDBufferToVideo:NSObject
             if videoWriter.startWriting()
             {
                 //start session 讓 pixel buffer != nil
-                videoWriter.startSession(atSourceTime: kCMTimeZero)
+                videoWriter.startSession(atSourceTime: CMTime.zero)
                 if (pixelBufferAdaptor.pixelBufferPool == nil)
                 {
                     fatalError("pixelBufferPool is nil")
@@ -208,14 +208,14 @@ class JDBufferToVideo:NSObject
                     let welf = self
                     let currentProgress = Progress(totalUnitCount: Int64(welf.buffer.count))
                     var frameCount: Int64 = 0
-                    let frameDuration = CMTimeMake(1, welf.fps)
+                    let frameDuration = CMTimeMake(value: 1, timescale: welf.fps)
                     var remainingPhotoURLs = welf.buffer
                     
                     while !remainingPhotoURLs.isEmpty
                     {
                         let nextPhotoURL:CVPixelBuffer? = remainingPhotoURLs.remove(at: 0)
                         let newPixelBufferoutputs:CVPixelBuffer = nextPhotoURL!
-                        let lastFrameTime = CMTimeMake(frameCount, welf.fps)
+                        let lastFrameTime = CMTimeMake(value: frameCount, timescale: welf.fps)
                         let presentationTime = frameCount == 0 ? lastFrameTime : CMTimeAdd(lastFrameTime, frameDuration)
                         while !videoWriterInput.isReadyForMoreMediaData
                         {

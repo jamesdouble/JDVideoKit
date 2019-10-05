@@ -105,8 +105,8 @@ public class JDPresentingViewController:UIViewController
         //產生縮圖列
         let assetImgGenerate : AVAssetImageGenerator    = AVAssetImageGenerator(asset: videoasset)
         assetImgGenerate.appliesPreferredTrackTransform = true
-        assetImgGenerate.requestedTimeToleranceAfter    = kCMTimeZero
-        assetImgGenerate.requestedTimeToleranceBefore   = kCMTimeZero
+        assetImgGenerate.requestedTimeToleranceAfter    = CMTime.zero
+        assetImgGenerate.requestedTimeToleranceBefore   = CMTime.zero
         assetImgGenerate.appliesPreferredTrackTransform = true
         let thumbTime: CMTime = videoasset.duration
         let thumbtimeSeconds:Double  = Double(CMTimeGetSeconds(thumbTime))
@@ -236,7 +236,7 @@ public class JDPresentingViewController:UIViewController
         {
             self.ChoosingMode = .Normal
             self.videoPlayer.replaceCurrentItem(with: assetitem)
-            videoPlayer.seek(to: kCMTimeZero) { (bool) in
+            videoPlayer.seek(to: CMTime.zero) { (bool) in
                 self.videoPlayer.rate = 1.0
             }
             return
@@ -252,7 +252,7 @@ public class JDPresentingViewController:UIViewController
     @IBAction func SaveAction(_ sender: Any) {
         if(indicatorView == nil)
         {
-            indicatorView = UIActivityIndicatorView(activityIndicatorStyle: .whiteLarge)
+            indicatorView = UIActivityIndicatorView(style: .whiteLarge)
             indicatorView?.frame = self.view.frame
             indicatorView?.startAnimating()
             self.view.addSubview(indicatorView!)
@@ -279,7 +279,7 @@ public class JDPresentingViewController:UIViewController
         {
             self.videoPlayer.replaceCurrentItem(with: assetitem)
         }
-        videoPlayer.seek(to: kCMTimeZero) { (bool) in
+        videoPlayer.seek(to: CMTime.zero) { (bool) in
             if(!bool) { print("seek Fail");return }
             self.videoPlayer.rate = 2.0
         }
@@ -290,7 +290,7 @@ public class JDPresentingViewController:UIViewController
         if let item = BoomVideoItem,videoPlayer.currentItem! != item
         {
             self.videoPlayer.replaceCurrentItem(with: item)
-            videoPlayer.seek(to: kCMTimeZero) { (bool) in
+            videoPlayer.seek(to: CMTime.zero) { (bool) in
                 if(!bool) { print("seek Fail"); return }
                 self.videoPlayer.rate = 1.0
             }
@@ -335,11 +335,11 @@ public class JDPresentingViewController:UIViewController
         }
         
         if keyPath == #keyPath(AVPlayerItem.status) {
-            let status: AVPlayerItemStatus
+            let status: AVPlayerItem.Status
             
             // Get the status change from the change dictionary
             if let statusNumber = change?[.newKey] as? NSNumber {
-                status = AVPlayerItemStatus(rawValue: statusNumber.intValue)!
+                status = AVPlayerItem.Status(rawValue: statusNumber.intValue)!
             } else {
                 status = .unknown
             }
@@ -353,6 +353,8 @@ public class JDPresentingViewController:UIViewController
             case .failed:
                 break
             case .unknown:
+                break
+            @unknown default:
                 break
             }
         }
