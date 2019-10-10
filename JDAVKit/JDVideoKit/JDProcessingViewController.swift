@@ -291,17 +291,14 @@ extension JDProcessingViewController: AVCaptureFileOutputRecordingDelegate
 extension JDProcessingViewController:UIImagePickerControllerDelegate,UINavigationControllerDelegate
 {
     
-    
-    
-    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any])
-    {
-        picker.dismiss(animated: true) { 
-            let type = info["UIImagePickerControllerMediaType"]
-            let url = info["UIImagePickerControllerMediaURL"]
-             let rurl = info["UIImagePickerControllerReferenceURL"]
-            let video = VideoOrigin(mediaType: type, mediaUrl: url, referenceURL: rurl)
-            self.videoHasBeenSelect(video: video)
-        }
+    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true) {
+                   let type = info["UIImagePickerControllerMediaType"]
+                   let url = info["UIImagePickerControllerMediaURL"]
+                    let rurl = info["UIImagePickerControllerReferenceURL"]
+                   let video = VideoOrigin(mediaType: type, mediaUrl: url, referenceURL: rurl)
+                   self.videoHasBeenSelect(video: video)
+               }
     }
     
     public func imagePickerControllerDidCancel(_ picker: UIImagePickerController)
